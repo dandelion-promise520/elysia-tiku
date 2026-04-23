@@ -1,62 +1,62 @@
-# OCS AI Answer Service Design
+# OCS AI 题库服务设计文档
 
-## Summary
+## 一、概述
 
-This project will add an OCS-compatible answer service to the existing Elysia app. The service will accept question requests from OCS, normalize the incoming payload, call an OpenAI-compatible model API, validate and format the returned answer, and respond with a stable JSON structure that OCS can parse through `AnswererWrapper`.
+本项目将在现有的 Elysia 应用中增加一个兼容 OCS 的答题服务。该服务负责接收来自 OCS 的题目请求，对输入数据进行标准化整理，调用兼容 OpenAI 风格的模型接口，对模型结果做校验与格式化，并返回稳定的 JSON 结构，供 OCS 通过 `AnswererWrapper` 进行解析。
 
-The first version is accuracy-first. It will support `single`, `multiple`, `judgement`, and `completion` question types. It will not implement a local question bank, admin UI, user accounts, billing, or subjective-answer workflows.
+第一期目标以“准确优先”为主。首版支持 `single`、`multiple`、`judgement`、`completion` 四类题型，不包含本地题库、后台管理、用户体系、计费能力，也不处理主观题长文本作答场景。
 
-## Goals
+## 二、目标
 
-- Expose a single HTTP API that can be called from OCS `AnswererWrapper`
-- Normalize noisy question input before sending it to AI
-- Use an OpenAI-compatible provider configured by environment variables
-- Return stable, machine-friendly JSON for OCS handlers
-- Favor answer correctness and output consistency over minimum latency
-- Include an optional debug mode for troubleshooting prompt and parsing issues
+- 提供一个可被 OCS `AnswererWrapper` 调用的 HTTP 接口
+- 在调用 AI 之前，对题目与选项做清洗和标准化
+- 使用环境变量配置兼容 OpenAI 风格的模型服务
+- 返回稳定、便于脚本解析的 JSON 响应
+- 优先保证答案正确性和输出格式稳定性，而不是极致响应速度
+- 提供可选调试模式，方便排查 prompt 与结果解析问题
 
-## Non-Goals
+## 三、非目标
 
-- Building a local question bank or CRUD backend
-- Building a web dashboard or management UI
-- Supporting essay or long-form subjective questions in v1
-- Multi-model voting, ensemble verification, or provider failover in v1
-- Authentication, quotas, billing, or tenant isolation in v1
-- Long-term conversational memory across requests
+- 不建设本地题库和题目管理后台
+- 不建设网页控制台或管理面板
+- 第一版不支持简答题、论述题等主观题高质量作答
+- 第一版不做多模型投票、交叉校验或供应商故障切换
+- 第一版不做鉴权、额度、计费或租户隔离
+- 不做跨请求的长期上下文记忆
 
-## Recommended Approach
+## 四、推荐方案
 
-Three approaches were considered:
+本次设计考虑了三种思路：
 
-1. Direct pass-through: map request to prompt, call AI, return result
-2. Structured pipeline: normalize input, build prompt, call AI, validate output, format response
-3. Multi-strategy aggregator: multiple prompts or multiple models with cross-checking
+1. 直通式：收到请求后直接拼 prompt 调 AI，再返回结果
+2. 管线式：标准化输入、构造 prompt、调用 AI、校验输出、格式化响应
+3. 聚合式：多 prompt 或多模型并行比对，再做综合判断
 
-The recommended approach is the structured pipeline. It preserves a simple external API while keeping internal boundaries clear enough to improve answer quality later. This fits the current minimal Elysia codebase and keeps the first release focused.
+推荐采用第二种“管线式”方案。它对外仍然只暴露一个简单接口，但内部边界清晰，更适合你当前“整理好再调 AI，再整理后返回”的目标，也方便后续继续提升准确率。对于现在这个只有一个入口文件的 Elysia 项目来说，这也是第一期最稳妥的实现方式。
 
-## Architecture
+## 五、整体架构
 
-The service will remain externally simple and internally modular.
+服务对外保持简单，对内采用模块化结构。
 
-### External Shape
+### 5.1 对外形态
 
-- One main API endpoint exposed by Elysia, for example `POST /api/answer`
-- Request body contains the question text, question type, and optional options
-- Response returns normalized question text, final answer, and optional debug metadata
+- 通过 Elysia 暴露一个主接口，例如 `POST /api/answer`
+- 请求体包含题目文本、题型以及可选的选项信息
+- 响应返回标准化后的题目、最终答案，以及可选调试信息
 
-### Internal Flow
+### 5.2 内部处理流程
 
-1. Receive OCS-compatible request
-2. Validate required fields and normalize the input payload
-3. Convert normalized input into a prompt payload for the AI provider
-4. Call the OpenAI-compatible chat completion endpoint
-5. Parse model output into a strict internal answer structure
-6. Post-process and validate the answer against the requested question type
-7. Return stable JSON for OCS consumption
+1. 接收 OCS 兼容请求
+2. 校验必填字段并对输入进行标准化处理
+3. 根据标准化结果构造 AI 请求内容
+4. 调用兼容 OpenAI 风格的聊天补全接口
+5. 将模型输出解析为内部统一答案结构
+6. 按题型对结果进行二次校验和格式修正
+7. 返回稳定 JSON 供 OCS 消费
 
-### Suggested Project Structure
+### 5.3 建议目录结构
 
-Following the Elysia feature-oriented pattern:
+遵循 Elysia 偏 feature 的组织方式：
 
 ```text
 src/
@@ -74,29 +74,29 @@ src/
     config.ts
 ```
 
-Responsibilities:
+各文件职责如下：
 
-- `modules/answer/index.ts`: Elysia routes and schema binding
-- `modules/answer/model.ts`: request, response, and internal validation models
-- `modules/answer/service.ts`: orchestration of the answer pipeline
-- `modules/answer/prompt.ts`: prompt construction rules by question type
-- `modules/answer/normalizer.ts`: input cleaning and type mapping
-- `modules/answer/formatter.ts`: output validation and response formatting
-- `modules/answer/provider.ts`: OpenAI-compatible HTTP client wrapper
-- `plugins/config.ts`: environment loading and typed config access
+- `modules/answer/index.ts`：Elysia 路由定义与请求响应 schema 绑定
+- `modules/answer/model.ts`：请求、响应及内部数据结构定义
+- `modules/answer/service.ts`：答题主流程编排
+- `modules/answer/prompt.ts`：按题型生成 prompt 的规则
+- `modules/answer/normalizer.ts`：输入清洗、题型映射、选项整理
+- `modules/answer/formatter.ts`：模型输出校验、修正与最终响应格式化
+- `modules/answer/provider.ts`：兼容 OpenAI 风格接口的请求封装
+- `plugins/config.ts`：环境变量读取与类型化配置访问
 
-## Request Contract
+## 六、请求协议
 
-The API should accept an OCS-oriented payload with these core fields:
+接口建议接受面向 OCS 的请求结构，核心字段如下：
 
-- `title`: string, required, the question text
-- `type`: string, required, one of `single`, `multiple`, `judgement`, `completion`
-- `options`: optional, either a newline-separated string or an array of option strings
-- `debug`: optional boolean for returning troubleshooting metadata
+- `title`：字符串，必填，题目内容
+- `type`：字符串，必填，取值为 `single`、`multiple`、`judgement`、`completion`
+- `options`：可选，支持换行分隔字符串或字符串数组
+- `debug`：可选布尔值，用于开启调试信息输出
 
-### Request Examples
+### 6.1 请求示例
 
-Single choice:
+单选题：
 
 ```json
 {
@@ -106,7 +106,7 @@ Single choice:
 }
 ```
 
-Completion:
+填空题：
 
 ```json
 {
@@ -115,11 +115,11 @@ Completion:
 }
 ```
 
-## Response Contract
+## 七、响应协议
 
-The API should always return structured JSON. This keeps the OCS-side `handler` simple and gives the backend full control over formatting.
+接口统一返回结构化 JSON。这样 OCS 侧的 `handler` 会很简单，同时后端也能完全控制结果格式。
 
-### Success Response
+### 7.1 成功响应
 
 ```json
 {
@@ -131,7 +131,7 @@ The API should always return structured JSON. This keeps the OCS-side `handler` 
 }
 ```
 
-### Success Response With Debug
+### 7.2 带调试信息的成功响应
 
 ```json
 {
@@ -153,7 +153,7 @@ The API should always return structured JSON. This keeps the OCS-side `handler` 
 }
 ```
 
-### Failure Response
+### 7.3 失败响应
 
 ```json
 {
@@ -164,104 +164,104 @@ The API should always return structured JSON. This keeps the OCS-side `handler` 
 }
 ```
 
-### OCS Integration Shape
+### 7.4 OCS 侧处理示例
 
-The OCS `handler` can remain very small:
+OCS 的 `handler` 可以保持非常简单：
 
 ```js
 return (res) => res.code === 1 ? [res.question, res.answer] : [res.message, undefined]
 ```
 
-## Input Normalization Rules
+## 八、输入标准化规则
 
-Because the system is accuracy-first, the server must clean and structure input before prompting the model.
+由于本服务采用“准确优先”策略，因此不能把原始内容直接发送给模型，服务端需要先完成输入清洗。
 
-### Title Normalization
+### 8.1 题目标准化
 
-- Trim leading and trailing whitespace
-- Collapse repeated blank lines and repeated spaces
-- Remove common leading question labels when they are obvious noise, such as `单选题`, `多选题`, `判断题`, `填空题`
-- Preserve the semantic text of the question
+- 去除首尾空白字符
+- 合并重复空行和重复空格
+- 去除明显无意义的题型前缀，如 `单选题`、`多选题`、`判断题`、`填空题`
+- 保留题目真正有意义的语义部分
 
-### Option Normalization
+### 8.2 选项标准化
 
-- Accept either a newline-separated string or a string array
-- Split newline-separated input into an array
-- Trim each option
-- Drop empty options
-- Preserve labels such as `A.`, `B.`, `C.`, `D.`
+- 支持换行字符串或字符串数组两种形式
+- 如果是换行字符串，先拆分为数组
+- 对每个选项做 trim
+- 去掉空字符串选项
+- 保留 `A.`、`B.`、`C.`、`D.` 这类标签信息
 
-### Type Normalization
+### 8.3 题型标准化
 
-Allowed types in v1:
+第一版只允许以下取值：
 
 - `single`
 - `multiple`
 - `judgement`
 - `completion`
 
-Any other value returns a validation failure and does not call the AI provider.
+任何其他值都应直接返回校验失败，且不调用 AI。
 
-## AI Provider Design
+## 九、AI Provider 设计
 
-The service will integrate with an OpenAI-compatible API. Configuration should come from environment variables.
+服务将对接兼容 OpenAI 风格的接口，配置通过环境变量提供。
 
-### Required Configuration
+### 9.1 必填配置
 
 - `AI_BASE_URL`
 - `AI_API_KEY`
 - `AI_MODEL`
 
-### Optional Configuration
+### 9.2 可选配置
 
 - `AI_TIMEOUT_MS`
 - `AI_TEMPERATURE`
 - `AI_MAX_TOKENS`
 - `AI_DEBUG_DEFAULT`
 
-### Provider Behavior
+### 9.3 Provider 行为要求
 
-- Use a single provider abstraction even though only one provider family is supported in v1
-- Send one request per incoming question
-- Use a low temperature by default to reduce answer drift
-- Expect JSON-only content from the model
-- Treat transport errors, timeout errors, and invalid model output as distinct failure cases
+- 虽然第一版只支持一种接口风格，但仍保留单独 provider 抽象层
+- 每个题目请求只调用一次模型接口
+- 默认使用较低 temperature，减少答案漂移
+- 期望模型仅返回 JSON 内容
+- 传输错误、超时错误、模型输出非法要作为不同失败类型处理
 
-## Prompt Strategy
+## 十、Prompt 策略
 
-Prompting should be explicitly constrained for predictable parsing.
+Prompt 必须足够受控，确保后端能够稳定解析结果。
 
-### System Prompt Requirements
+### 10.1 System Prompt 要求
 
-The system instruction should:
+System Prompt 需要明确：
 
-- Tell the model it is answering educational objective questions
-- Require JSON-only output
-- Forbid markdown, extra commentary, or chain-of-thought style explanations
-- Require fields: `answer`, `confidence`, and `reason`
-- State the expected answer shape by question type
+- 模型的任务是回答教育类客观题
+- 输出必须是纯 JSON
+- 不允许返回 markdown、额外解释或思维链内容
+- 返回字段必须包含 `answer`、`confidence`、`reason`
+- 按不同题型说明允许的答案格式
 
-### User Prompt Contents
+### 10.2 User Prompt 内容
 
-The user prompt should include:
+User Prompt 应至少包含：
 
-- Normalized question title
-- Normalized question type
-- Normalized options array when present
-- A direct instruction to choose the most likely correct answer
+- 标准化后的题目文本
+- 标准化后的题型
+- 标准化后的选项数组（如果有）
+- 一条直接指令，要求模型返回最可能正确的答案
 
-### Type-Specific Output Constraints
+### 10.3 按题型的输出约束
 
-- `single`: one option label or one exact short answer if labels are unavailable
-- `multiple`: multiple option labels joined into a single string using a stable separator chosen by the backend
-- `judgement`: only `正确` or `错误`
-- `completion`: a concise fill-in answer without extra explanation
+- `single`：只允许返回一个选项标签，若无标签则返回单个明确短答案
+- `multiple`：返回多个选项标签，由后端统一拼接成稳定格式
+- `judgement`：只允许返回 `正确` 或 `错误`
+- `completion`：返回简洁填空内容，不带额外解释
 
-## Answer Parsing And Validation
+## 十一、答案解析与校验
 
-Model output must never be trusted directly. The backend is responsible for validating and correcting it where safe.
+模型输出不能直接信任，必须经过后端二次校验和必要修正。
 
-### Expected Internal AI Payload
+### 11.1 期望的内部结果结构
 
 ```json
 {
@@ -271,184 +271,184 @@ Model output must never be trusted directly. The backend is responsible for vali
 }
 ```
 
-### Post-Processing Rules
+### 11.2 通用后处理规则
 
-- Parse JSON strictly
-- If confidence is missing, set it to `null`
-- Normalize reason to a short plain-text string
-- Remove surrounding explanation from completion answers
-- Normalize punctuation and spacing
+- 严格按 JSON 解析
+- 如果 `confidence` 缺失，则补成 `null`
+- `reason` 统一整理成简短纯文本
+- 填空题答案需要去掉外围说明性文字
+- 统一标点与空白格式
 
-### Type-Specific Validation
+### 11.3 按题型校验
 
-For `single`:
+对于 `single`：
 
-- Accept one option label when options are present
-- If the model returns option text instead of label, try to match it back to the closest option
-- Reject multi-answer output
+- 如果有选项，优先接受单个选项标签
+- 如果模型返回的是选项文本而不是标签，尝试映射回最接近的标签
+- 拒绝多答案输出
 
-For `multiple`:
+对于 `multiple`：
 
-- Accept multiple labels
-- Deduplicate labels
-- Normalize order by option order
-- Convert the final output into a single separator-joined string compatible with OCS expectations
+- 接受多个标签
+- 结果需要去重
+- 结果顺序按原始选项顺序统一
+- 最终转成 OCS 兼容的单字符串格式
 
-For `judgement`:
+对于 `judgement`：
 
-- Normalize synonyms such as `对`, `错`, `true`, `false`, `yes`, `no` into `正确` or `错误`
-- Reject ambiguous responses
+- 将 `对`、`错`、`true`、`false`、`yes`、`no` 等同义值统一映射为 `正确` 或 `错误`
+- 拒绝含义不明确的结果
 
-For `completion`:
+对于 `completion`：
 
-- Return a concise answer string only
-- Strip leading phrases such as `答案是`
-- Reject empty output
+- 最终只返回简洁答案字符串
+- 去掉类似“答案是”这样的前缀
+- 空结果视为失败
 
-## Error Handling
+## 十二、错误处理
 
-The API should distinguish failure sources internally while keeping the outward contract simple.
+接口对外保持统一响应结构，但内部要区分不同失败来源。
 
-### Validation Failures
+### 12.1 请求校验失败
 
-Cases:
+典型场景：
 
-- Missing `title`
-- Missing `type`
-- Unsupported `type`
-- Malformed `options`
+- 缺少 `title`
+- 缺少 `type`
+- `type` 不受支持
+- `options` 格式错误
 
-Response behavior:
+处理方式：
 
-- Return `code: 0`
-- Include a short `message`
-- Do not call the AI provider
+- 返回 `code: 0`
+- 返回简短 `message`
+- 不调用 AI
 
-### Provider Failures
+### 12.2 Provider 调用失败
 
-Cases:
+典型场景：
 
-- Network failure
-- Timeout
-- Unauthorized provider response
-- Non-2xx provider status
+- 网络失败
+- 超时
+- 鉴权失败
+- 上游返回非 2xx 状态
 
-Response behavior:
+处理方式：
 
-- Return `code: 0`
-- Include a generic provider failure `message`
-- Optionally expose more detail only in debug mode
+- 返回 `code: 0`
+- 返回通用失败 `message`
+- 更详细原因仅在 debug 模式下暴露
 
-### Parsing Failures
+### 12.3 模型结果解析失败
 
-Cases:
+典型场景：
 
-- AI returns non-JSON output
-- JSON is missing required fields
-- Answer cannot be mapped to the requested question type
+- AI 返回的不是 JSON
+- JSON 缺少关键字段
+- 答案无法映射到当前题型要求
 
-Response behavior:
+处理方式：
 
-- Return `code: 0`
-- Include a short validation-related `message`
+- 返回 `code: 0`
+- 返回简短的校验失败 `message`
 
-## Debug Mode
+## 十三、调试模式
 
-Debug mode should help diagnose prompt and mapping issues without changing the success contract.
+调试模式用于排查 prompt 构造和结果映射问题，不影响正常成功结构。
 
-### Debug Contents
+### 13.1 调试信息内容
 
-When enabled, the response may include:
+启用后可以返回：
 
-- Normalized input payload
-- Provider name and model
-- Raw AI output
-- Parsed AI output
-- Post-processing notes when answer repair logic is applied
+- 标准化后的输入内容
+- Provider 名称和模型名
+- 模型原始输出
+- 模型输出解析结果
+- 若发生修正规则命中，可返回后处理说明
 
-### Debug Controls
+### 13.2 调试控制方式
 
-- A per-request `debug` flag can enable debug output
-- An environment default can enable debug output globally during development
-- Production deployments should default debug mode to off
+- 允许通过单次请求的 `debug` 字段开启
+- 允许通过环境变量设置开发环境默认开启
+- 生产环境默认应关闭
 
-## Testing Strategy
+## 十四、测试策略
 
-Testing is essential because the service depends on an AI provider but must still behave deterministically at the API boundary.
+由于服务依赖 AI，但对外接口仍要保持确定性，因此测试必须覆盖关键转换与兜底逻辑。
 
-### Unit Tests
+### 14.1 单元测试
 
-Cover:
+覆盖内容：
 
-- Title normalization
-- Option parsing
-- Type mapping
-- Single-answer formatting
-- Multiple-answer normalization and separator handling
-- Judgement answer normalization
-- Completion answer cleanup
+- 题目清洗
+- 选项拆分
+- 题型映射
+- 单选答案格式化
+- 多选答案去重与分隔符处理
+- 判断题答案归一化
+- 填空题答案清洗
 
-### Route And Contract Tests
+### 14.2 路由与协议测试
 
-Cover:
+覆盖内容：
 
-- Valid request returns stable JSON
-- Missing fields return validation failure
-- Unsupported type returns validation failure
-- Debug mode includes additional metadata
+- 合法请求返回稳定 JSON
+- 缺字段时返回校验失败
+- 不支持的题型返回校验失败
+- 开启 debug 时返回附加调试信息
 
-### Provider Adaptation Tests
+### 14.3 Provider 适配测试
 
-Cover:
+覆盖内容：
 
-- OpenAI-compatible request generation
-- Response parsing
-- Timeout and non-2xx handling
-- Invalid JSON returned by the model
+- OpenAI 风格请求内容生成
+- 模型响应解析
+- 超时和非 2xx 处理
+- 模型返回非法 JSON 的情况
 
-These tests should mock the provider rather than depend on a live AI endpoint.
+这些测试应通过 mock provider 完成，而不是依赖真实 AI 接口。
 
-## Security And Operational Notes
+## 十五、安全与运行注意事项
 
-The first version is intentionally simple, but a few guardrails should still be designed in:
+第一版虽然保持精简，但仍需考虑基础防护：
 
-- Do not log raw API keys
-- Apply reasonable request body limits
-- Apply request timeouts to provider calls
-- Keep prompt construction server-side only
-- Avoid returning raw provider errors unless debug mode is enabled
+- 不记录原始 API Key
+- 对请求体大小做合理限制
+- 对上游请求设置超时
+- Prompt 拼接逻辑只保留在服务端
+- 非 debug 模式下不直接暴露上游原始错误
 
-Rate limiting and authentication are intentionally out of scope for v1, but the route structure should leave room to add them later.
+限流和鉴权虽然不在第一版范围内，但路由结构要为后续扩展留出空间。
 
-## Deployment And Configuration Notes
+## 十六、部署与配置说明
 
-The project currently runs as a Bun-based Elysia app. The answer service should stay compatible with that setup.
+当前项目运行在 Bun + Elysia 环境中，新增服务应保持与现有运行方式一致。
 
-Expected runtime assumptions:
+默认运行假设：
 
-- Bun runtime
-- Environment variables loaded at startup
-- One HTTP server process
-- Outbound HTTPS access to the configured AI provider
+- 使用 Bun 作为运行时
+- 启动时读取环境变量
+- 单进程 HTTP 服务
+- 能够正常访问配置好的 AI Provider HTTPS 地址
 
-## Implementation Sequence
+## 十七、实现顺序建议
 
-The implementation should proceed in this order:
+建议按以下顺序推进开发：
 
-1. Add typed config loading for AI provider settings
-2. Add answer module schemas and internal types
-3. Implement input normalization helpers
-4. Implement prompt builder and provider client
-5. Implement answer parsing and formatter logic
-6. Expose the Elysia route
-7. Add unit and route tests
-8. Verify the final JSON shape against a sample OCS `AnswererWrapper` configuration
+1. 增加 AI Provider 配置读取与类型定义
+2. 增加 answer 模块的请求响应模型
+3. 实现输入标准化工具
+4. 实现 prompt 构造器和 provider 客户端
+5. 实现答案解析与格式化逻辑
+6. 暴露 Elysia 路由
+7. 补齐单元测试和路由测试
+8. 用一份 OCS `AnswererWrapper` 示例配置验证最终返回结构
 
-## Open Questions Resolved For V1
+## 十八、第一期已确认决策
 
-- Priority: accuracy over speed
-- Supported question types: `single`, `multiple`, `judgement`, `completion`
-- Provider family: OpenAI-compatible APIs only
-- Response style: dual-mode JSON with optional debug metadata
+- 优先级：准确优先，不追求最低延迟
+- 支持题型：`single`、`multiple`、`judgement`、`completion`
+- AI 接口形态：兼容 OpenAI 风格接口
+- 返回风格：双模式 JSON，支持可选 debug 信息
 
-No unresolved product decisions remain for the first implementation slice.
+第一期已经没有未决产品问题，可以在你确认文档后进入实现计划阶段。

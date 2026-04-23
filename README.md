@@ -1,15 +1,41 @@
-# Elysia with Bun runtime
+# Elysia Tiku (AI 答题辅助系统)
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
+基于 **Turborepo** 管理的 Monorepo 项目，提供高性能的 AI 答题接口服务以及一个可视化的配置管理面板。
+
+## 项目架构
+
+本项目主要包含两个子应用（位于 `apps/` 目录下）：
+
+### 1. 后端服务 (`apps/server`)
+基于高性能的 **ElysiaJS** 框架与 Bun 运行时构建，主要负责处理配置更新和 AI 答题请求。
+
+- **配置管理**：提供 API 获取和动态更新 AI 配置（运行时动态生效，无需重启）。
+- **答题核心逻辑**：
+  - **输入处理**: 接收题目、题型和选项，并进行标准化清洗。
+  - **构建 Prompt**: 根据传入的题目和选项构建适合 AI 格式的 Prompt。
+  - **请求 AI**: 默认兼容 OpenAI 格式的接口（如阿里云 DashScope 的 Qwen 系列模型等）。
+  - **格式化输出**: 解析 AI 返回的结果，提取纯净的答案文本返回。
+  - **Debug 机制**: 支持开启 Debug 模式返回原始 Prompt 和 AI 的原始输出内容，方便调试提示词和响应。
+
+### 2. 前端管理面板 (`apps/web`)
+基于 **React + Vite + TypeScript** 构建的可视化 Dashboard。
+
+- **⚙️ AI 配置**：可视化修改 AI 接口地址、API Key、使用的模型等参数。
+- **📋 OCS 配置**：一键生成 OCS（网课辅助脚本）兼容的自定义题库配置，方便将服务快速接入脚本实现自动化答题。
+- **🧪 答题测试**：内置测试工作台，可模拟发送题目与选项，直观测试后端接口的准确率和响应速度。
+
+## 快速开始
+
+### 安装依赖
 ```bash
-bun create elysia ./elysia-example
+bun install
 ```
 
-## Development
-To start the development server run:
+### 启动开发环境
 ```bash
 bun run dev
 ```
+该命令会同时启动后端服务（默认运行在 `http://localhost:3000`）和前端管理面板（默认运行在 `http://localhost:5173`）。
 
-Open http://localhost:3000/ with your browser to see the result.
+### 初始化配置
+您可以复制 `apps/server/.env.example` 为 `apps/server/.env` 并进行基础配置，或者直接在启动项目后，打开前端管理面板（`http://localhost:5173`）进行可视化配置和保存。
