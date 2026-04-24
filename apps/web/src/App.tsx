@@ -7,7 +7,7 @@ import LogsPanel from "./components/LogsPanel";
 import LoginPanel from "./components/LoginPanel";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Terminal, Database, Code, ShieldAlert, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
+import { Terminal, Database, Code, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
 
 type Tab = "config" | "ocs" | "tester" | "logs";
 

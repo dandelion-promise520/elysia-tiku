@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { fetchConfig } from "../api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Lock, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
 
 interface Props {
   onLoginSuccess: () => void;
@@ -17,19 +21,17 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
     setLoading(true);
     setError(null);
     
-    // Temporarily set token to test
     localStorage.setItem("admin_token", password);
     
     try {
       await fetchConfig();
-      // If no AuthError is thrown, login is successful
       onLoginSuccess();
     } catch (err: any) {
       if (err.name === "AuthError") {
-        setError("密码错误");
+        setError("ERR_AUTH: INVALID_PASSWORD");
         localStorage.removeItem("admin_token");
       } else {
-        setError("连接服务失败");
+        setError("ERR_NET: UNABLE_TO_CONNECT");
       }
     } finally {
       setLoading(false);
@@ -37,37 +39,55 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
   };
 
   return (
-    <div className="card" style={{ maxWidth: "400px", margin: "4rem auto", textAlign: "center" }}>
-      <div className="card-title" style={{ justifyContent: "center", marginBottom: "1.5rem" }}>
-        <span className="icon">🔒</span> 管理员登录
-      </div>
-      
-      <p style={{ color: "var(--text-light)", marginBottom: "2rem", fontSize: "0.875rem" }}>
-        该系统已设置管理密码，请输入密码以继续
-      </p>
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder="请输入管理员密码"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ textAlign: "center" }}
-            autoFocus
-          />
+    <Card className="mx-auto max-w-md border bg-card">
+      <CardHeader className="p-6 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border bg-muted text-foreground rounded-full">
+          <Lock className="h-8 w-8" />
         </div>
-        
-        {error && <div style={{ color: "var(--danger)", fontSize: "0.875rem", marginBottom: "1rem" }}>{error}</div>}
+        <CardTitle className="text-3xl font-semibold tracking-tight">AUTH.SYS</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground mt-2">
+          Administrator access required
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Input
+              type="password"
+              placeholder="ENTER_PASSWORD"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="text-center"
+              autoFocus
+            />
+          </div>
+          
+          {error && (
+            <div className="flex items-center justify-center gap-2 bg-destructive/10 text-destructive p-3 rounded-md text-sm font-medium border border-destructive/20">
+              <AlertTriangle className="h-5 w-5" />
+              {error}
+            </div>
+          )}
 
-        <button 
-          type="submit" 
-          className="btn btn-primary btn-block" 
-          disabled={!password || loading}
-        >
-          {loading ? <span className="spinner" /> : "登 录"}
-        </button>
-      </form>
-    </div>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={!password || loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                VERIFYING...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5" />
+                INITIATE.LOGIN
+              </span>
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

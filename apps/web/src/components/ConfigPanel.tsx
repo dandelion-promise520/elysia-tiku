@@ -1,5 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateConfig, type AppConfig } from "../api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Settings2, Key, Cpu, Timer, Thermometer, Hash, Bug, ScrollText, Lock, Save } from "lucide-react";
 
 interface Props {
   config: AppConfig | null;
@@ -22,8 +28,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Sync from config on first load
-  useState(() => {
+  useEffect(() => {
     if (config) {
       setForm({
         aiBaseUrl: config.aiBaseUrl,
@@ -34,10 +39,10 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
         aiMaxTokens: String(config.aiMaxTokens),
         aiDebugDefault: config.aiDebugDefault,
         aiLogDebug: config.aiLogDebug,
-        adminPassword: "", // don't show the real password
+        adminPassword: "",
       });
     }
-  });
+  }, [config]);
 
   const set = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -61,149 +66,167 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
       setDirty(false);
       onSaved();
     } catch {
-      showToast("保存失败，请检查服务", "error");
+      showToast("ERR_SAVE: CONFIG_UPDATE_FAILED", "error");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="card" id="config-panel">
-      <div className="card-title">
-        <span className="icon">🔧</span>
-        AI 服务配置
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="cfg-base-url">API Base URL</label>
-        <input
-          id="cfg-base-url"
-          type="text"
-          placeholder="https://api.openai.com/v1"
-          value={form.aiBaseUrl}
-          onChange={(e) => set("aiBaseUrl", e.target.value)}
-        />
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="cfg-api-key">API Key</label>
-          <input
-            id="cfg-api-key"
-            type="password"
-            placeholder={config?.aiApiKey || "输入新的 API Key"}
-            value={form.aiApiKey}
-            onChange={(e) => set("aiApiKey", e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="cfg-model">模型名称</label>
-          <input
-            id="cfg-model"
+    <Card className="border bg-card">
+      <CardHeader className="border-b border-border bg-muted/20 p-6">
+        <CardTitle className="font-semibold text-xl tracking-tight pb-4 flex items-center gap-3">
+          <Settings2 className="h-8 w-8 text-primary" />
+          SYS.CONFIG
+        </CardTitle>
+        <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
+          AI Engine Parameters & Security
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-8 space-y-8">
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <ScrollText className="h-4 w-4 text-primary" /> API.BASE_URL
+          </Label>
+          <Input
             type="text"
-            placeholder="gpt-4o-mini"
-            value={form.aiModel}
-            onChange={(e) => set("aiModel", e.target.value)}
+            className=""
+            placeholder="https://api.openai.com/v1"
+            value={form.aiBaseUrl}
+            onChange={(e) => set("aiBaseUrl", e.target.value)}
           />
         </div>
-      </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="cfg-temperature">Temperature</label>
-          <input
-            id="cfg-temperature"
-            type="number"
-            step="0.1"
-            min="0"
-            max="2"
-            value={form.aiTemperature}
-            onChange={(e) => set("aiTemperature", e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="cfg-max-tokens">Max Tokens</label>
-          <input
-            id="cfg-max-tokens"
-            type="number"
-            step="64"
-            min="64"
-            value={form.aiMaxTokens}
-            onChange={(e) => set("aiMaxTokens", e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="cfg-timeout">超时时间 (ms)</label>
-        <input
-          id="cfg-timeout"
-          type="number"
-          step="1000"
-          min="5000"
-          value={form.aiTimeoutMs}
-          onChange={(e) => set("aiTimeoutMs", e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <div className="toggle-row">
-          <div className="toggle-label">
-            <span>默认开启调试</span>
-            <span>每次请求返回 AI 原始输出</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+              <Key className="h-4 w-4 text-primary" /> API.KEY
+            </Label>
+            <Input
+              type="password"
+              className=""
+              placeholder={config?.aiApiKey ? "[KEY_SET_ENTER_NEW_TO_OVERWRITE]" : "[ENTER_NEW_API_KEY]"}
+              value={form.aiApiKey}
+              onChange={(e) => set("aiApiKey", e.target.value)}
+            />
           </div>
-          <label className="toggle">
-            <input
-              type="checkbox"
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+              <Cpu className="h-4 w-4 text-primary" /> AI.MODEL
+            </Label>
+            <Input
+              type="text"
+              className=""
+              placeholder="gpt-4o-mini"
+              value={form.aiModel}
+              onChange={(e) => set("aiModel", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+              <Thermometer className="h-4 w-4 text-primary" /> PARAM.TEMP
+            </Label>
+            <Input
+              type="number"
+              className=""
+              step="0.1"
+              min="0"
+              max="2"
+              value={form.aiTemperature}
+              onChange={(e) => set("aiTemperature", e.target.value)}
+            />
+          </div>
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+              <Hash className="h-4 w-4 text-primary" /> MAX_TOKENS
+            </Label>
+            <Input
+              type="number"
+              className=""
+              step="64"
+              min="64"
+              value={form.aiMaxTokens}
+              onChange={(e) => set("aiMaxTokens", e.target.value)}
+            />
+          </div>
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+              <Timer className="h-4 w-4 text-primary" /> TIMEOUT_MS
+            </Label>
+            <Input
+              type="number"
+              className=""
+              step="1000"
+              min="5000"
+              value={form.aiTimeoutMs}
+              onChange={(e) => set("aiTimeoutMs", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-6 pt-8 border-t border-border">
+          <div className="flex items-center justify-between p-5 border border-border bg-background transition-colors hover:bg-muted/10 group">
+            <div className="space-y-1">
+              <Label className="text-sm font-mono font-bold uppercase tracking-widest group-hover:text-primary transition-colors">DEBUG.DEFAULT_OUTPUT</Label>
+              <p className="text-xs text-muted-foreground font-mono uppercase">Return raw AI output string for all requests</p>
+            </div>
+            <Switch
               checked={form.aiDebugDefault}
-              onChange={(e) => set("aiDebugDefault", e.target.checked)}
+              onCheckedChange={(v) => set("aiDebugDefault", v)}
+              className="data-[state=checked]:bg-primary"
             />
-            <span className="track" />
-            <span className="thumb" />
-          </label>
-        </div>
-      </div>
-
-      <div className="form-group">
-        <div className="toggle-row">
-          <div className="toggle-label">
-            <span>日志调试</span>
-            <span>服务端控制台输出详情日志</span>
           </div>
-          <label className="toggle">
-            <input
-              type="checkbox"
+
+          <div className="flex items-center justify-between p-5 border border-border bg-background transition-colors hover:bg-muted/10 group">
+            <div className="space-y-1">
+              <Label className="text-sm font-mono font-bold uppercase tracking-widest group-hover:text-primary transition-colors">SYS.LOG_DEBUG</Label>
+              <p className="text-xs text-muted-foreground font-mono uppercase">Enable verbose terminal logging on server</p>
+            </div>
+            <Switch
               checked={form.aiLogDebug}
-              onChange={(e) => set("aiLogDebug", e.target.checked)}
+              onCheckedChange={(v) => set("aiLogDebug", v)}
+              className="data-[state=checked]:bg-primary"
             />
-            <span className="track" />
-            <span className="thumb" />
-          </label>
+          </div>
         </div>
-      </div>
 
-      <div className="form-group" style={{ marginTop: "2rem", borderTop: "1px solid var(--border-color)", paddingTop: "1.5rem" }}>
-        <label htmlFor="cfg-admin-pwd" style={{ color: "var(--danger)" }}>管理后台密码 (选填)</label>
-        <p style={{ fontSize: "0.75rem", color: "var(--text-light)", marginBottom: "0.5rem" }}>
-          设置后，每次进入面板均需验证密码。设为空可清除密码。
-        </p>
-        <input
-          id="cfg-admin-pwd"
-          type="password"
-          placeholder={config?.hasPassword ? "已设置密码，输入新密码以修改" : "未设置后台密码"}
-          value={form.adminPassword}
-          onChange={(e) => set("adminPassword", e.target.value)}
-        />
-      </div>
+        <div className="space-y-3 pt-8 border-t border-border bg-destructive/10 border border-destructive/20 rounded-md p-6 border-x-0 border-b-0 -mx-8 px-8">
+          <Label className="flex items-center gap-2 text-destructive font-mono text-sm font-bold uppercase tracking-widest">
+            <Lock className="h-4 w-4" /> AUTH.ROOT_PASSWORD
+          </Label>
+          <Input
+            type="password"
+            className="border-destructive focus-visible:ring-destructive"
+            placeholder={config?.hasPassword ? "[PWD_SET_ENTER_NEW_TO_OVERWRITE]" : "[NO_PASSWORD_SET]"}
+            value={form.adminPassword}
+            onChange={(e) => set("adminPassword", e.target.value)}
+          />
+          <p className="text-xs text-destructive/80 font-mono uppercase">
+            WARNING: Leaves system unprotected if empty.
+          </p>
+        </div>
 
-      <button
-        className="btn btn-primary btn-block"
-        id="btn-save-config"
-        disabled={!dirty || saving}
-        onClick={handleSave}
-      >
-        {saving ? <span className="spinner" /> : "💾 保存配置"}
-      </button>
-    </div>
+        <div className="pt-4">
+          <Button
+            className="w-full"
+            disabled={!dirty || saving}
+            onClick={handleSave}
+          >
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <Bug className="h-6 w-6 animate-spin" /> WRITING_TO_DISK...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Save className="h-6 w-6 group-hover:scale-110 transition-transform" /> SAVE.CONFIG
+              </span>
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
