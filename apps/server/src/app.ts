@@ -39,25 +39,15 @@ export function createApp(options: CreateAppOptions = {}) {
   const answerService = new AnswerService(provider, config, logger);
 
   return new Elysia()
-    .onAfterHandle(({ request, set }) => {
-      const origin = request.headers.get("origin");
-      if (!origin) return;
-
-      set.headers["access-control-allow-origin"] = origin;
+    .onAfterHandle(({ set }) => {
+      set.headers["access-control-allow-origin"] = "*";
       set.headers["access-control-allow-methods"] = "GET,POST,PUT,OPTIONS";
       set.headers["access-control-allow-headers"] = "content-type,authorization";
     })
-    .options("/*", ({ request, set }) => {
-      const origin = request.headers.get("origin");
-
-      if (origin) {
-        set.headers["access-control-allow-origin"] = origin;
-        set.headers["access-control-allow-methods"] = "GET,POST,PUT,OPTIONS";
-        set.headers["access-control-allow-headers"] =
-          request.headers.get("access-control-request-headers") ??
-          "content-type,authorization";
-      }
-
+    .options("/*", ({ set }) => {
+      set.headers["access-control-allow-origin"] = "*";
+      set.headers["access-control-allow-methods"] = "GET,POST,PUT,OPTIONS";
+      set.headers["access-control-allow-headers"] = "content-type,authorization";
       set.status = 204;
       return "";
     })
@@ -65,9 +55,6 @@ export function createApp(options: CreateAppOptions = {}) {
     .group("/api", (app) =>
       app
         .onBeforeHandle(({ request, set }) => {
-          // Exempt /api/answer from auth
-          if (new URL(request.url).pathname === "/api/answer") return;
-
           const c = getConfig();
           if (!c.adminPassword) return; // Auth disabled if no password set
 
@@ -126,8 +113,8 @@ export function createApp(options: CreateAppOptions = {}) {
             payload: row.payload ? JSON.parse(row.payload) : undefined,
           }));
         })
-        .use(createAnswerModule(answerService))
-    );
+    )
+    .use(createAnswerModule(answerService));
 }
 
 function maskKey(key: string): string {

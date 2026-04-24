@@ -1,0 +1,46 @@
+<h2>What about the color palette?</h2>
+<p class="subtitle">Since we're going with the Vercel/Linear style, how should we handle colors?</p>
+
+<div class="options">
+  <div class="option" data-choice="monochrome-white" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Pure Monochrome (Classic Vercel)</h3>
+      <p>Pure black background, dark gray borders, white text, and white primary buttons. Maximum contrast and minimalism.</p>
+      <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; padding: 1rem; border: 1px solid #333; border-radius: 0.5rem; background: #000;">
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #fff; border: 1px solid #fff;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #111; border: 1px solid #333;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #333; border: 1px solid #444;"></div>
+        <div style="margin-left: auto; background: #fff; color: #000; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">Action</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="monochrome-brand" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Monochrome + Brand Accent</h3>
+      <p>Keep the black/dark gray foundation, but use your existing Electric Orange (#FF4F00) for primary buttons and active states to retain identity.</p>
+      <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; padding: 1rem; border: 1px solid #333; border-radius: 0.5rem; background: #000;">
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #ff4f00; border: 1px solid #ff4f00;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #111; border: 1px solid #333;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #333; border: 1px solid #444;"></div>
+        <div style="margin-left: auto; background: #ff4f00; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">Action</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="linear-tint" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Deep Blue/Purple Tint (Linear Style)</h3>
+      <p>Instead of pure black, use an extremely dark slate/blue background (#0a0a0f) with subtle purple/indigo accents for a softer dark mode.</p>
+      <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center; padding: 1rem; border: 1px solid #1f1f2e; border-radius: 0.5rem; background: #0a0a0f;">
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #5e6ad2; border: 1px solid #5e6ad2;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #13131a; border: 1px solid #1f1f2e;"></div>
+        <div style="height: 24px; width: 24px; border-radius: 50%; background: #1f1f2e; border: 1px solid #2d2d3d;"></div>
+        <div style="margin-left: auto; background: #5e6ad2; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;">Action</div>
+      </div>
+    </div>
+  </div>
+</div>
