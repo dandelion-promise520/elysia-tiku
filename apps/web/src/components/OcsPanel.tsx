@@ -39,19 +39,19 @@ export default function OcsPanel({ showToast }: Props) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
-      <Card className="border bg-card overflow-hidden">
-        <CardHeader className="border-b border-border bg-muted/20 p-6">
-          <CardTitle className="font-semibold text-xl tracking-tight border-b border-border pb-4 flex items-center gap-3">
+      <Card className="overflow-hidden">
+        <CardHeader className="shadow-[inset_0_-1px_0_hsl(var(--slate-6))] bg-[hsl(var(--slate-2))] p-6">
+          <CardTitle className="font-semibold text-xl tracking-tight shadow-[inset_0_-1px_0_hsl(var(--slate-6))] pb-4 flex items-center gap-3">
             <ClipboardList className="h-8 w-8 text-primary" />
             OCS 题库配置生成器
           </CardTitle>
-          <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
+          <CardDescription className="font-mono text-xs  mt-2">
             生成用于 OCS 浏览器扩展的 JSON 配置文件
           </CardDescription>
         </CardHeader>
         <CardContent className="p-8 space-y-8">
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-medium text-[hsl(var(--slate-11))]">
               <Link2 className="h-4 w-4 text-primary" /> 目标服务器地址
             </Label>
             <Input
@@ -67,14 +67,14 @@ export default function OcsPanel({ showToast }: Props) {
           </div>
 
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-medium text-[hsl(var(--slate-11))]">
               生成的 JSON 配置代码
             </Label>
             <div className="relative group">
               <div className="absolute top-4 right-4 z-10">
                 <Button
                   size="sm"
-                  className={` rounded-md h-10 gap-2 font-mono uppercase tracking-widest ${copied ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"}`}
+                  className={` rounded-md h-10 gap-2 font-mono  ${copied ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"}`}
                   onClick={handleCopy}
                 >
                   {copied ? (
@@ -88,7 +88,7 @@ export default function OcsPanel({ showToast }: Props) {
                   )}
                 </Button>
               </div>
-              <pre className="p-6 bg-background border border-border font-mono text-sm text-foreground overflow-x-auto whitespace-pre leading-relaxed custom-scrollbar shadow-inner">
+              <pre className="p-6 bg-background glass-panel font-mono text-sm text-foreground overflow-x-auto whitespace-pre leading-relaxed custom-scrollbar shadow-inner">
                 {json}
               </pre>
             </div>
@@ -105,8 +105,8 @@ export default function OcsPanel({ showToast }: Props) {
         </CardContent>
       </Card>
 
-      <Card className="border bg-card bg-muted/30 border-muted">
-        <CardHeader className="p-6 border-b border-primary bg-primary text-primary-foreground">
+      <Card className="border bg-card bg-[hsl(var(--slate-2))] glass-panel">
+        <CardHeader className="p-6 bg-[hsl(var(--blue-3))] shadow-[inset_0_-1px_0_hsl(var(--blue-6))] text-[hsl(var(--blue-11))]">
           <CardTitle className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
             <BookOpen className="h-6 w-6" />
             快速使用指南
@@ -122,12 +122,12 @@ export default function OcsPanel({ showToast }: Props) {
               <span className="text-3xl font-black text-muted-foreground group-hover:text-primary transition-colors font-mono">
                 {item.step}
               </span>
-              <p className="text-sm font-mono uppercase tracking-widest pt-2 leading-relaxed">
+              <p className="text-sm font-mono  pt-2 leading-relaxed">
                 {item.text}
               </p>
             </div>
           ))}
-          <div className="mt-8 p-5 border border-primary bg-primary/10 flex gap-4 items-start">
+          <div className="mt-8 p-5 shadow-[inset_0_0_0_1px_hsl(var(--blue-6))] bg-[hsl(var(--blue-3))] flex gap-4 items-start">
             <Info className="h-6 w-6 text-primary shrink-0" />
             <div className="space-y-1">
               <div className="text-sm font-bold text-primary uppercase font-mono tracking-widest">

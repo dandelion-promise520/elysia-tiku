@@ -60,19 +60,19 @@ export default function TesterPanel() {
   };
 
   return (
-    <Card className="border bg-card">
-      <CardHeader className="border-b border-border bg-muted/20 p-6">
-        <CardTitle className="font-semibold text-xl tracking-tight border-b border-border pb-4 flex items-center gap-3">
+    <Card className="">
+      <CardHeader className="shadow-[inset_0_-1px_0_hsl(var(--slate-6))] bg-[hsl(var(--slate-2))] rounded-t-lg p-6">
+        <CardTitle className="font-semibold text-xl tracking-tight shadow-[inset_0_-1px_0_hsl(var(--slate-6))] pb-4 flex items-center gap-3">
           <FlaskConical className="h-8 w-8 text-primary" />
           大模型请求测试
         </CardTitle>
-        <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
+        <CardDescription className="font-mono text-xs  mt-2">
           直接调用 AI 引擎，验证提示词与参数配置是否正确
         </CardDescription>
       </CardHeader>
       <CardContent className="p-8 space-y-8">
         <div className="space-y-3">
-          <Label className="text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+          <Label className="text-muted-foreground font-mono text-sm font-medium">
             测试题目内容
           </Label>
           <Textarea
@@ -85,14 +85,14 @@ export default function TesterPanel() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-3">
-            <Label className="text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="text-muted-foreground font-mono text-sm font-medium">
               题目类型
             </Label>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger className="h-10 bg-background px-4">
                 <SelectValue placeholder="选择题目类型" />
               </SelectTrigger>
-              <SelectContent className="bg-background border border-border rounded-md shadow-[4px_4px_0_0_hsl(var(--primary))] uppercase font-mono tracking-widest">
+              <SelectContent className="bg-background glass-panel rounded-md shadow-[4px_4px_0_0_hsl(var(--primary))] uppercase font-mono tracking-widest">
                 {TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value} className="focus:bg-primary focus:text-primary-foreground rounded-md">
                     {t.label}
@@ -105,7 +105,7 @@ export default function TesterPanel() {
 
         {type !== "completion" && (
           <div className="space-y-3">
-            <Label className="text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="text-muted-foreground font-mono text-sm font-medium">
               候选项列表 (每行填写一个选项)
             </Label>
             <Textarea
@@ -143,13 +143,13 @@ export default function TesterPanel() {
         </div>
 
         {result && (
-          <div className={`mt-8 border-4 animate-in slide-in-from-top-4 duration-500 ${
+          <div className={`mt-8  animate-in slide-in-from-top-4 duration-500 ${
             result.code === 1 
-              ? "bg-secondary/10 border-secondary shadow-[8px_8px_0_0_hsl(var(--secondary))]" 
-              : "bg-destructive/10 border-destructive shadow-[8px_8px_0_0_hsl(var(--destructive))]"
+              ? "bg-[hsl(var(--green-3))] shadow-[inset_0_0_0_1px_hsl(var(--green-6))] rounded-md" 
+              : "bg-[hsl(var(--red-3))] shadow-[inset_0_0_0_1px_hsl(var(--red-6))] rounded-md"
           }`}>
-            <div className={`p-4 border-b-4 font-mono font-bold uppercase tracking-widest text-sm flex items-center gap-2 ${
-              result.code === 1 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-destructive text-destructive-foreground border-destructive"
+            <div className={`p-4  font-mono font-medium text-sm flex items-center gap-2 ${
+              result.code === 1 ? "text-[hsl(var(--green-11))] border-b border-[hsl(var(--green-6))] bg-[hsl(var(--green-4))]" : "text-[hsl(var(--red-11))] border-b border-[hsl(var(--red-6))] bg-[hsl(var(--red-4))]"
             }`}>
               {result.code === 1 ? <CheckSquare className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
               {result.code === 1 ? "系统响应：测试成功" : "系统响应：测试失败"}
@@ -158,10 +158,10 @@ export default function TesterPanel() {
             <div className="p-8">
               {result.code === 1 ? (
                 <div className="space-y-6">
-                  <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground font-mono">
+                  <div className="text-sm font-medium text-muted-foreground font-mono">
                     AI 计算结果
                   </div>
-                  <div className="text-5xl md:text-7xl font-black text-foreground font-semibold tracking-tight uppercase bg-background border border-border p-6 shadow-inner">
+                  <div className="text-5xl md:text-7xl font-black text-foreground font-semibold tracking-tight uppercase bg-background glass-panel p-6 shadow-inner">
                     {result.answer}
                   </div>
                   {result.confidence != null && (
@@ -170,7 +170,7 @@ export default function TesterPanel() {
                         <span>置信度评分</span>
                         <span>{Math.round(result.confidence * 100)}%</span>
                       </div>
-                      <div className="h-4 w-full border border-border bg-background p-0.5">
+                      <div className="h-4 w-full glass-panel bg-background p-0.5">
                         <div 
                           className="h-full bg-secondary transition-all duration-1000 ease-out" 
                           style={{ width: `${result.confidence * 100}%` }}
@@ -180,18 +180,18 @@ export default function TesterPanel() {
                   )}
                   {result.reason && (
                     <div className="pt-8 mt-4 border-t border-border border-dashed">
-                      <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary mb-4 font-mono">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary mb-4 font-mono">
                         <Info className="h-4 w-4" />
                         执行追踪日志
                       </div>
-                      <p className="text-foreground leading-relaxed font-mono text-sm bg-background border border-border p-4 shadow-inner">
+                      <p className="text-foreground leading-relaxed font-mono text-sm bg-background glass-panel p-4 shadow-inner">
                         {result.reason}
                       </p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-2xl font-bold uppercase tracking-widest text-destructive font-mono text-center p-8">
+                <div className="text-2xl font-medium text-destructive font-mono text-center p-8">
                   {result.message || "发生未知错误"}
                 </div>
               )}

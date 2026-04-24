@@ -37,7 +37,7 @@ export default function App() {
 
   const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
     if (type === "success") {
-      toast(msg, { icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+      toast(msg, { icon: <CheckCircle2 className="h-4 w-4 text-[hsl(var(--green-9))]" /> });
     } else {
       toast(msg, { icon: <AlertCircle className="h-4 w-4 text-destructive" /> });
     }
@@ -83,8 +83,8 @@ export default function App() {
   return (
     <div className="min-h-screen flex bg-background text-foreground font-sans">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card/50 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-border">
+      <aside className="w-64 shadow-[inset_-1px_0_0_hsl(var(--slate-6))] bg-background flex flex-col">
+        <div className="h-16 flex items-center px-6 shadow-[inset_0_-1px_0_hsl(var(--slate-6))]">
           <h1 className="font-semibold text-lg tracking-tight">Elysia Tiku</h1>
         </div>
         <div className="flex-1 py-6 px-4 space-y-1">
@@ -96,7 +96,7 @@ export default function App() {
                 key={item.id}
                 onClick={() => setTab(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  isActive ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -108,7 +108,7 @@ export default function App() {
         <div className="p-4 border-t border-border flex flex-col gap-3 text-xs font-mono text-muted-foreground">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-destructive"}`} />
+              <span className={`h-2 w-2 rounded-full ${online ? "bg-[hsl(var(--green-9))]" : "bg-destructive"}`} />
               {online ? "运行中" : "已离线"}
             </span>
             <span>{Math.floor(Math.random() * 40 + 20)}% 内存使用</span>
@@ -122,7 +122,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 flex items-center px-8 border-b border-border">
+        <header className="h-16 flex items-center px-8 shadow-[inset_0_-1px_0_hsl(var(--slate-6))]">
           <h2 className="font-semibold text-lg">
             {navItems.find(i => i.id === tab)?.label}
           </h2>

@@ -73,19 +73,19 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
   };
 
   return (
-    <Card className="border bg-card">
-      <CardHeader className="border-b border-border bg-muted/20 p-6">
+    <Card className="">
+      <CardHeader className="shadow-[inset_0_-1px_0_hsl(var(--slate-6))] bg-[hsl(var(--slate-2))] rounded-t-lg p-6">
         <CardTitle className="font-semibold text-xl tracking-tight pb-4 flex items-center gap-3">
           <Settings2 className="h-8 w-8 text-primary" />
           引擎参数配置
         </CardTitle>
-        <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
+        <CardDescription className="font-mono text-xs  mt-2">
           配置大模型接口与系统安全选项
         </CardDescription>
       </CardHeader>
       <CardContent className="p-8 space-y-8">
         <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+          <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
             <ScrollText className="h-4 w-4 text-primary" /> API 接口地址
           </Label>
           <Input
@@ -99,7 +99,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
               <Key className="h-4 w-4 text-primary" /> API 密钥
             </Label>
             <Input
@@ -111,7 +111,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             />
           </div>
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
               <Cpu className="h-4 w-4 text-primary" /> AI 模型名称
             </Label>
             <Input
@@ -126,7 +126,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
               <Thermometer className="h-4 w-4 text-primary" /> 输出随机性 (Temperature)
             </Label>
             <Input
@@ -140,7 +140,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             />
           </div>
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
               <Hash className="h-4 w-4 text-primary" /> 最大输出长度 (Max Tokens)
             </Label>
             <Input
@@ -153,7 +153,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             />
           </div>
           <div className="space-y-3">
-            <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
+            <Label className="flex items-center gap-2 text-sm text-[hsl(var(--slate-11))] font-medium text-[hsl(var(--slate-11))]">
               <Timer className="h-4 w-4 text-primary" /> 请求超时时间 (毫秒)
             </Label>
             <Input
@@ -168,9 +168,9 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
         </div>
 
         <div className="space-y-6 pt-8 border-t border-border">
-          <div className="flex items-center justify-between p-5 border border-border bg-background transition-colors hover:bg-muted/10 group">
+          <div className="flex items-center justify-between p-5 glass-panel bg-background transition-colors hover:bg-muted/10 group">
             <div className="space-y-1">
-              <Label className="text-sm font-mono font-bold uppercase tracking-widest group-hover:text-primary transition-colors">默认返回调试输出</Label>
+              <Label className="text-sm font-mono font-medium text-[hsl(var(--slate-11))] group-hover:text-primary transition-colors">默认返回调试输出</Label>
               <p className="text-xs text-muted-foreground font-mono uppercase">在所有请求中直接返回 AI 的原始字符串输出，忽略结构化格式</p>
             </div>
             <Switch
@@ -180,9 +180,9 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             />
           </div>
 
-          <div className="flex items-center justify-between p-5 border border-border bg-background transition-colors hover:bg-muted/10 group">
+          <div className="flex items-center justify-between p-5 glass-panel bg-background transition-colors hover:bg-muted/10 group">
             <div className="space-y-1">
-              <Label className="text-sm font-mono font-bold uppercase tracking-widest group-hover:text-primary transition-colors">启用系统详细日志</Label>
+              <Label className="text-sm font-mono font-medium text-[hsl(var(--slate-11))] group-hover:text-primary transition-colors">启用系统详细日志</Label>
               <p className="text-xs text-muted-foreground font-mono uppercase">在服务器终端开启详细的调试日志打印</p>
             </div>
             <Switch
@@ -193,8 +193,8 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           </div>
         </div>
 
-        <div className="space-y-3 pt-8 border-t border-border bg-destructive/10 border border-destructive/20 rounded-md p-6 border-x-0 border-b-0 -mx-8 px-8">
-          <Label className="flex items-center gap-2 text-destructive font-mono text-sm font-bold uppercase tracking-widest">
+        <div className="space-y-3 pt-8 border-t border-border bg-[hsl(var(--red-3))] shadow-[inset_0_0_0_1px_hsl(var(--red-6))] rounded-md p-6 border-x-0 border-b-0 -mx-8 px-8">
+          <Label className="flex items-center gap-2 text-[hsl(var(--red-11))] font-mono text-sm font-medium text-[hsl(var(--slate-11))]">
             <Lock className="h-4 w-4" /> 管理员系统密码
           </Label>
           <Input
@@ -204,7 +204,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             value={form.adminPassword}
             onChange={(e) => set("adminPassword", e.target.value)}
           />
-          <p className="text-xs text-destructive/80 font-mono uppercase">
+          <p className="text-xs text-[hsl(var(--red-11))] opacity-80 font-mono uppercase">
             警告：如果留空，任何人都可以访问此管理面板。
           </p>
         </div>
