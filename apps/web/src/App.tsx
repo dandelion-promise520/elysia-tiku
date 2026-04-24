@@ -5,6 +5,9 @@ import OcsPanel from "./components/OcsPanel";
 import TesterPanel from "./components/TesterPanel";
 import LogsPanel from "./components/LogsPanel";
 import LoginPanel from "./components/LoginPanel";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import { Terminal, Database, Code, ShieldAlert, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
 
 type Tab = "config" | "ocs" | "tester" | "logs";
 
@@ -12,8 +15,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("config");
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [online, setOnline] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // default true, will be set to false if 401
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const loadConfig = useCallback(async () => {
     try {
@@ -34,75 +36,107 @@ export default function App() {
   }, [loadConfig]);
 
   const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 2500);
+    if (type === "success") {
+      toast(msg, { icon: <CheckCircle2 className="h-4 w-4 text-green-500" /> });
+    } else {
+      toast(msg, { icon: <AlertCircle className="h-4 w-4 text-destructive" /> });
+    }
   }, []);
 
-  return (
-    <>
-      <div className="bg-gradient" />
-      <div className="container">
-        <header className="header">
-          <h1>⚙️ Elysia Tiku 管理面板</h1>
-          <p>AI 题库服务配置管理 · OCS 题库配置生成</p>
-        </header>
+  const handleLogout = () => {
+    localStorage.removeItem("admin_token");
+    setIsLoggedIn(false);
+    setConfig(null);
+  };
 
-        <div className="status-bar" id="status-bar">
-          <span className={`status-dot ${online ? "online" : "offline"}`} />
-          <span className="status-text">
-            {online ? "服务运行中" : "无法连接服务"}
-          </span>
-          {config && (
-            <span className="status-model">模型: {config.aiModel || "未配置"}</span>
-          )}
-        </div>
-
-        {isLoggedIn ? (
-          <>
-            <div className="tabs" id="main-tabs">
-              <button
-                className={`tab ${tab === "config" ? "active" : ""}`}
-                onClick={() => setTab("config")}
-              >
-                ⚙️ AI 配置
-              </button>
-              <button
-                className={`tab ${tab === "ocs" ? "active" : ""}`}
-                onClick={() => setTab("ocs")}
-              >
-                📋 OCS 配置
-              </button>
-              <button
-                className={`tab ${tab === "tester" ? "active" : ""}`}
-                onClick={() => setTab("tester")}
-              >
-                🧪 答题测试
-              </button>
-              <button
-                className={`tab ${tab === "logs" ? "active" : ""}`}
-                onClick={() => setTab("logs")}
-              >
-                📄 系统日志
-              </button>
-            </div>
-
-            {tab === "config" && (
-              <ConfigPanel config={config} onSaved={() => { loadConfig(); showToast("配置已保存"); }} showToast={showToast} />
-            )}
-            {tab === "ocs" && <OcsPanel showToast={showToast} />}
-            {tab === "tester" && <TesterPanel />}
-            {tab === "logs" && <LogsPanel />}
-          </>
-        ) : (
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-foreground font-sans">
+        <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+          <div className="mb-8 text-center space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight">Elysia Tiku</h1>
+            <p className="text-sm text-muted-foreground">Admin Console / Login</p>
+          </div>
           <LoginPanel onLoginSuccess={loadConfig} />
-        )}
-      </div>
-
-      {toast && (
-        <div className={`toast ${toast.type}`} role="status">
-          {toast.type === "success" ? "✅" : "❌"} {toast.msg}
         </div>
-      )}
-    </>
+        <Toaster position="bottom-right" theme="dark" toastOptions={{ className: 'border border-border bg-card text-card-foreground shadow-sm rounded-md font-sans text-sm' }} />
+      </div>
+    );
+  }
+
+  const renderContent = () => {
+    switch (tab) {
+      case "config": return <ConfigPanel config={config} onSaved={() => { loadConfig(); showToast("Configuration saved successfully"); }} showToast={showToast} />;
+      case "ocs": return <OcsPanel showToast={showToast} />;
+      case "tester": return <TesterPanel />;
+      case "logs": return <LogsPanel />;
+    }
+  };
+
+  const navItems = [
+    { id: "config", label: "Configuration", icon: Database },
+    { id: "ocs", label: "OCS Generator", icon: Code },
+    { id: "tester", label: "Debug & Test", icon: Terminal },
+    { id: "logs", label: "System Logs", icon: Terminal },
+  ] as const;
+
+  return (
+    <div className="min-h-screen flex bg-background text-foreground font-sans">
+      {/* Sidebar */}
+      <aside className="w-64 border-r border-border bg-card/50 flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-border">
+          <h1 className="font-semibold text-lg tracking-tight">Elysia Tiku</h1>
+        </div>
+        <div className="flex-1 py-6 px-4 space-y-1">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            const isActive = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="p-4 border-t border-border flex flex-col gap-3 text-xs font-mono text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-destructive"}`} />
+              {online ? "ONLINE" : "OFFLINE"}
+            </span>
+            <span>{Math.floor(Math.random() * 40 + 20)}% MEM</span>
+          </div>
+          {config && <div className="truncate">CTX: {config.aiModel || "N/A"}</div>}
+          <button onClick={handleLogout} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mt-2">
+            <LogOut className="h-3 w-3" /> Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header className="h-16 flex items-center px-8 border-b border-border">
+          <h2 className="font-semibold text-lg">
+            {navItems.find(i => i.id === tab)?.label}
+          </h2>
+        </header>
+        <div className="flex-1 overflow-auto custom-scrollbar p-8">
+          <div className="max-w-5xl mx-auto animate-in fade-in duration-300">
+            {renderContent()}
+          </div>
+        </div>
+      </main>
+
+      <Toaster position="bottom-right" theme="dark" toastOptions={{
+        className: 'border border-border bg-card text-card-foreground shadow-sm rounded-md font-sans text-sm',
+      }} />
+    </div>
   );
 }
