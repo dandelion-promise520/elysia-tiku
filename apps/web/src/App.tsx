@@ -55,7 +55,7 @@ export default function App() {
         <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
           <div className="mb-8 text-center space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">Elysia Tiku</h1>
-            <p className="text-sm text-muted-foreground">Admin Console / Login</p>
+            <p className="text-sm text-muted-foreground">管理面板 / 登录</p>
           </div>
           <LoginPanel onLoginSuccess={loadConfig} />
         </div>
@@ -66,7 +66,7 @@ export default function App() {
 
   const renderContent = () => {
     switch (tab) {
-      case "config": return <ConfigPanel config={config} onSaved={() => { loadConfig(); showToast("Configuration saved successfully"); }} showToast={showToast} />;
+      case "config": return <ConfigPanel config={config} onSaved={() => { loadConfig(); showToast("系统配置保存成功"); }} showToast={showToast} />;
       case "ocs": return <OcsPanel showToast={showToast} />;
       case "tester": return <TesterPanel />;
       case "logs": return <LogsPanel />;
@@ -74,10 +74,10 @@ export default function App() {
   };
 
   const navItems = [
-    { id: "config", label: "Configuration", icon: Database },
-    { id: "ocs", label: "OCS Generator", icon: Code },
-    { id: "tester", label: "Debug & Test", icon: Terminal },
-    { id: "logs", label: "System Logs", icon: Terminal },
+    { id: "config", label: "系统设置", icon: Database },
+    { id: "ocs", label: "题库配置生成", icon: Code },
+    { id: "tester", label: "测试与调试", icon: Terminal },
+    { id: "logs", label: "系统运行日志", icon: Terminal },
   ] as const;
 
   return (
@@ -109,13 +109,13 @@ export default function App() {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-destructive"}`} />
-              {online ? "ONLINE" : "OFFLINE"}
+              {online ? "运行中" : "已离线"}
             </span>
-            <span>{Math.floor(Math.random() * 40 + 20)}% MEM</span>
+            <span>{Math.floor(Math.random() * 40 + 20)}% 内存使用</span>
           </div>
-          {config && <div className="truncate">CTX: {config.aiModel || "N/A"}</div>}
+          {config && <div className="truncate">当前模型: {config.aiModel || "N/A"}</div>}
           <button onClick={handleLogout} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mt-2">
-            <LogOut className="h-3 w-3" /> Logout
+            <LogOut className="h-3 w-3" /> 退出登录
           </button>
         </div>
       </aside>

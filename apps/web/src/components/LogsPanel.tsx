@@ -17,7 +17,7 @@ export default function LogsPanel() {
       setLogs(data);
       setError(null);
     } catch (err: any) {
-      setError("ERR_NET: UNABLE_TO_FETCH_LOGS");
+      setError("网络错误：无法获取系统日志");
     } finally {
       setLoading(false);
     }
@@ -31,12 +31,12 @@ export default function LogsPanel() {
     <Card className="border bg-card">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 border-b border-border bg-muted/20 p-6">
         <div>
-          <CardTitle className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
+          <CardTitle className="font-semibold text-xl tracking-tight flex items-center gap-3">
             <History className="h-8 w-8 text-primary" />
-            SYS.LOGS
+            系统运行日志
           </CardTitle>
           <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
-            System operation history and transaction logs
+            查看系统操作历史、错误信息及请求事务日志
           </CardDescription>
         </div>
         <Button 
@@ -51,7 +51,7 @@ export default function LogsPanel() {
           ) : (
             <RefreshCw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform" />
           )}
-          <span className="font-mono tracking-widest uppercase">SYNC</span>
+          <span className="font-mono tracking-widest uppercase">刷新日志</span>
         </Button>
       </CardHeader>
       <CardContent className="p-0">
@@ -62,13 +62,13 @@ export default function LogsPanel() {
           </div>
         )}
 
-        <div className="bg-background border-t-0 p-6">
+        <div className="bg-background p-6">
           <ScrollArea className="h-[600px] pr-4 custom-scrollbar">
             <div className="space-y-4">
             {logs.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4 py-20 font-mono uppercase tracking-widest">
                 <Terminal className="h-16 w-16 text-border" />
-                <p>NO_LOG_ENTRIES_FOUND</p>
+                <p>暂无日志记录</p>
               </div>
             )}
 
@@ -93,7 +93,7 @@ export default function LogsPanel() {
                       <div className="w-3 h-3 bg-destructive border border-border" />
                       <div className="w-3 h-3 bg-secondary border border-border" />
                       <div className="w-3 h-3 bg-primary border border-border" />
-                      <span className="text-xs font-bold font-mono text-muted-foreground tracking-widest ml-2 uppercase">DATA_PAYLOAD</span>
+                      <span className="text-xs font-bold font-mono text-muted-foreground tracking-widest ml-2 uppercase">请求载荷数据</span>
                     </div>
                     <pre className="text-xs font-mono text-secondary overflow-x-auto whitespace-pre-wrap leading-relaxed">
                       <code>{JSON.stringify(log.payload, null, 2)}</code>

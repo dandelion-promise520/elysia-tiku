@@ -28,10 +28,10 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
       onLoginSuccess();
     } catch (err: any) {
       if (err.name === "AuthError") {
-        setError("ERR_AUTH: INVALID_PASSWORD");
+        setError("身份验证失败：密码错误");
         localStorage.removeItem("admin_token");
       } else {
-        setError("ERR_NET: UNABLE_TO_CONNECT");
+        setError("网络错误：无法连接到服务器");
       }
     } finally {
       setLoading(false);
@@ -44,9 +44,9 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border bg-muted text-foreground rounded-full">
           <Lock className="h-8 w-8" />
         </div>
-        <CardTitle className="text-3xl font-semibold tracking-tight">AUTH.SYS</CardTitle>
+        <CardTitle className="text-3xl font-semibold tracking-tight">系统身份验证</CardTitle>
         <CardDescription className="text-sm text-muted-foreground mt-2">
-          Administrator access required
+          需要管理员权限才能访问系统
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -54,7 +54,7 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
           <div className="space-y-2">
             <Input
               type="password"
-              placeholder="ENTER_PASSWORD"
+              placeholder="请输入管理员密码"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="text-center"
@@ -77,12 +77,12 @@ export default function LoginPanel({ onLoginSuccess }: Props) {
             {loading ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                VERIFYING...
+                验证中...
               </span>
             ) : (
               <span className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5" />
-                INITIATE.LOGIN
+                登录系统
               </span>
             )}
           </Button>

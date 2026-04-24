@@ -30,10 +30,10 @@ export default function OcsPanel({ showToast }: Props) {
     try {
       await navigator.clipboard.writeText(json);
       setCopied(true);
-      showToast("SYS.MSG: JSON Copied");
+      showToast("系统消息：JSON 配置已复制到剪贴板");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      showToast("ERR_COPY: CLIPBOARD_DENIED", "error");
+      showToast("复制失败：剪贴板权限被拒绝", "error");
     }
   };
 
@@ -41,34 +41,34 @@ export default function OcsPanel({ showToast }: Props) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
       <Card className="border bg-card overflow-hidden">
         <CardHeader className="border-b border-border bg-muted/20 p-6">
-          <CardTitle className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
+          <CardTitle className="font-semibold text-xl tracking-tight border-b border-border pb-4 flex items-center gap-3">
             <ClipboardList className="h-8 w-8 text-primary" />
-            OCS_GEN
+            OCS 题库配置生成器
           </CardTitle>
           <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
-            Generate JSON config for OCS Extension
+            生成用于 OCS 浏览器扩展的 JSON 配置文件
           </CardDescription>
         </CardHeader>
         <CardContent className="p-8 space-y-8">
           <div className="space-y-3">
             <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
-              <Link2 className="h-4 w-4 text-primary" /> TARGET_SERVER_URL
+              <Link2 className="h-4 w-4 text-primary" /> 目标服务器地址
             </Label>
             <Input
               type="text"
-              className=" h-12 px-4 bg-background"
+              className=" px-4 bg-background"
               placeholder="http://your-server:3000"
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
             />
             <p className="text-xs text-muted-foreground font-mono uppercase">
-              URL of the Elysia Tiku backend service
+              Elysia Tiku 后端服务的访问地址
             </p>
           </div>
 
           <div className="space-y-3">
             <Label className="flex items-center gap-2 text-muted-foreground font-mono text-sm font-bold uppercase tracking-widest">
-              GENERATED_PAYLOAD
+              生成的 JSON 配置代码
             </Label>
             <div className="relative group">
               <div className="absolute top-4 right-4 z-10">
@@ -79,11 +79,11 @@ export default function OcsPanel({ showToast }: Props) {
                 >
                   {copied ? (
                     <>
-                      <Check className="h-4 w-4" /> COPIED
+                      <Check className="h-4 w-4" /> 已复制
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4" /> COPY_JSON
+                      <Copy className="h-4 w-4" /> 复制 JSON
                     </>
                   )}
                 </Button>
@@ -99,7 +99,7 @@ export default function OcsPanel({ showToast }: Props) {
             onClick={handleCopy}
           >
             <span className="flex items-center gap-2">
-              <Copy className="h-6 w-6 group-hover:scale-110 transition-transform" /> EXEC.COPY_CONFIG
+              <Copy className="h-6 w-6 group-hover:scale-110 transition-transform" /> 复制完整配置代码
             </span>
           </Button>
         </CardContent>
@@ -109,14 +109,14 @@ export default function OcsPanel({ showToast }: Props) {
         <CardHeader className="p-6 border-b border-primary bg-primary text-primary-foreground">
           <CardTitle className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
             <BookOpen className="h-6 w-6" />
-            QUICK_START.MANUAL
+            快速使用指南
           </CardTitle>
         </CardHeader>
         <CardContent className="p-8 space-y-6">
           {[
-            { step: "01", text: "Ensure backend service is running and accessible (use localhost:3000 for local dev)." },
-            { step: "02", text: "Input server URL above, JSON payload updates automatically." },
-            { step: "03", text: "Execute COPY and paste into OCS Extension settings." },
+            { step: "01", text: "请确保后端服务正在运行且可访问（本地开发请使用 localhost:3000）。" },
+            { step: "02", text: "在上方输入服务器地址，下方的 JSON 配置代码会自动更新。" },
+            { step: "03", text: "点击复制按钮，并将代码粘贴到 OCS 扩展的自定义题库设置中。" },
           ].map((item) => (
             <div key={item.step} className="flex gap-6 items-start group">
               <span className="text-3xl font-black text-muted-foreground group-hover:text-primary transition-colors font-mono">
@@ -131,10 +131,10 @@ export default function OcsPanel({ showToast }: Props) {
             <Info className="h-6 w-6 text-primary shrink-0" />
             <div className="space-y-1">
               <div className="text-sm font-bold text-primary uppercase font-mono tracking-widest">
-                HTTPS_WARNING
+                HTTPS 混合内容警告
               </div>
               <p className="text-xs text-muted-foreground font-mono uppercase leading-relaxed">
-                Mixed content blocked if OCS domain is HTTPS but backend is HTTP without reverse proxy.
+                如果 OCS 答题页面是 HTTPS 协议，而后端服务是 HTTP 协议且没有反向代理，浏览器会拦截请求。
               </p>
             </div>
           </div>
