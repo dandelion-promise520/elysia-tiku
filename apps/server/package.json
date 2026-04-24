@@ -8,6 +8,7 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@elysiajs/static": "^1.4.10",
     "elysia": "latest"
   },
   "devDependencies": {

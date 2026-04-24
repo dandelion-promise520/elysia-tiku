@@ -5,12 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Settings2, Key, Cpu, Timer, Thermometer, Hash, Bug, ScrollText, Lock, Save } from "lucide-react";
+import { Settings2, Key, Cpu, Timer, Thermometer, Hash, Bug, ScrollText, Lock, Save, Shuffle, Eye, EyeOff, Copy, Check } from "lucide-react";
 
 interface Props {
   config: AppConfig | null;
   onSaved: () => void;
   showToast: (msg: string, type?: "success" | "error") => void;
+}
+
+function generateRandomPassword(length = 16): string {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)))
+    .map((b) => charset[b % charset.length])
+    .join("");
 }
 
 export default function ConfigPanel({ config, onSaved, showToast }: Props) {
@@ -27,6 +34,8 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
   });
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -197,13 +206,69 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           <Label className="flex items-center gap-2 text-[hsl(var(--red-11))] font-mono text-sm font-medium text-[hsl(var(--slate-11))]">
             <Lock className="h-4 w-4" /> 管理员系统密码
           </Label>
-          <Input
-            type="password"
-            className="border-destructive focus-visible:ring-destructive"
-            placeholder={config?.hasPassword ? "[已设置，输入新密码以覆盖]" : "[未设置密码]"}
-            value={form.adminPassword}
-            onChange={(e) => set("adminPassword", e.target.value)}
-          />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type={showPassword ? "text" : "password"}
+                className="border-destructive focus-visible:ring-destructive pr-9"
+                placeholder={config?.hasPassword ? "[已设置，输入新密码以覆盖]" : "[未设置密码]"}
+                value={form.adminPassword}
+                onChange={(e) => set("adminPassword", e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[hsl(var(--red-11))] opacity-60 hover:opacity-100 transition-opacity"
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              className="shrink-0 border-destructive text-[hsl(var(--red-11))] hover:bg-[hsl(var(--red-4))] hover:text-[hsl(var(--red-11))]"
+              onClick={() => { set("adminPassword", generateRandomPassword()); setShowPassword(true); }}
+            >
+              <Shuffle className="h-4 w-4 mr-1.5" />
+              随机密码
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              className="shrink-0 border-destructive text-[hsl(var(--red-11))] hover:bg-[hsl(var(--red-4))] hover:text-[hsl(var(--red-11))]"
+              disabled={!form.adminPassword}
+              onClick={() => {
+                const text = form.adminPassword;
+                if (navigator.clipboard?.writeText) {
+                  navigator.clipboard.writeText(text).catch(() => {
+                    fallbackCopy(text);
+                  });
+                } else {
+                  fallbackCopy(text);
+                }
+                setCopied(true);
+                showToast("密码已复制到剪贴板", "success");
+                setTimeout(() => setCopied(false), 2000);
+
+                function fallbackCopy(str: string) {
+                  const ta = document.createElement("textarea");
+                  ta.value = str;
+                  ta.style.position = "fixed";
+                  ta.style.opacity = "0";
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(ta);
+                }
+              }}
+            >
+              {copied ? <Check className="h-4 w-4 mr-1.5" /> : <Copy className="h-4 w-4 mr-1.5" />}
+              {copied ? "已复制" : "复制"}
+            </Button>
+          </div>
           <p className="text-xs text-[hsl(var(--red-11))] opacity-80 font-mono uppercase">
             警告：如果留空，任何人都可以访问此管理面板。
           </p>

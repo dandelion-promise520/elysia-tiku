@@ -1,0 +1,7 @@
+node_modules
+.git
+.turbo
+*.db
+apps/web/dist
+apps/web/node_modules
+apps/server/node_modules

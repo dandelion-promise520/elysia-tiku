@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 tiku.db \"SELECT key, value FROM config WHERE key LIKE 'AI_%' LIMIT 10;\")"
+    ]
+  }
+}

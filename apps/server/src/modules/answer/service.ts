@@ -32,10 +32,12 @@ export class AnswerService {
     status: number;
     body: AnswerServiceResponse;
   }> {
+    console.log("[SERVICE] Starting answer processing");
     const title = typeof body.title === "string" ? body.title.trim() : "";
     if (!title) {
+      console.log("[SERVICE] Title is empty, returning error");
       return {
-        status: 400,
+        status: 200,
         body: {
           code: 0,
           question: "",
@@ -45,19 +47,9 @@ export class AnswerService {
       };
     }
 
+    console.log("[SERVICE] Normalizing input");
     const requestedType =
-      typeof body.type === "string" ? normalizeQuestionType(body.type) : "completion";
-    if (!requestedType) {
-      return {
-        status: 400,
-        body: {
-          code: 0,
-          question: title,
-          answer: "",
-          message: "Unsupported question type",
-        },
-      };
-    }
+      (typeof body.type === "string" ? normalizeQuestionType(body.type) : null) ?? "completion";
 
     const normalizedInput = {
       title: normalizeQuestionTitle(title),
@@ -66,14 +58,22 @@ export class AnswerService {
       debug: body.debug ?? this.config.aiDebugDefault,
     };
 
+    console.log("[SERVICE] Calling AI provider");
     let providerResult;
     try {
       providerResult = await this.provider.answerQuestion(
         buildPrompt(normalizedInput),
       );
-    } catch {
+      console.log("[SERVICE] AI provider returned successfully");
+    } catch (error) {
+      console.error("[SERVICE] AI provider request failed");
+      console.error("[SERVICE] Error type:", error?.constructor?.name);
+      console.error("[SERVICE] Error message:", error instanceof Error ? error.message : String(error));
+      if (error instanceof Error && error.stack) {
+        console.error("[SERVICE] Error stack:", error.stack.split('\n').slice(0, 5).join('\n'));
+      }
       return {
-        status: 502,
+        status: 200,
         body: {
           code: 0,
           question: normalizedInput.title,
@@ -83,6 +83,7 @@ export class AnswerService {
       };
     }
 
+    console.log("[SERVICE] Formatting result");
     const formattedResult = formatAnswerResult(
       normalizedInput,
       providerResult.payload,
@@ -101,7 +102,7 @@ export class AnswerService {
         });
       }
       return {
-        status: formattedResult.code === 1 ? 200 : 422,
+        status: 200,
         body: formattedResult,
       };
     }

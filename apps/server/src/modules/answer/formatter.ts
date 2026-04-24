@@ -32,6 +32,8 @@ export type FormattedAnswerResult = AnswerSuccessResult | AnswerFailureResult;
 
 const JUDGEMENT_TRUE_VALUES = new Set(["正确", "对", "true", "yes"]);
 const JUDGEMENT_FALSE_VALUES = new Set(["错误", "错", "false", "no"]);
+const OPTION_LABEL_PATTERN = /^([A-Z])(?:[.\u3001\uFF0E:：\)）]|\s)/i;
+const COMPLETION_PREFIX_PATTERN = /^答案是(?:[:：])?\s*/u;
 
 export function formatAnswerResult(
   question: NormalizedQuestion,
@@ -76,7 +78,7 @@ function formatAnswerByType(
 function formatSingleAnswer(options: string[], answer: string): string | null {
   const trimmed = answer.trim();
   const label = trimmed.toUpperCase();
-  const hasLabeledOptions = options.some((option) => /^[A-Z]\./.test(option));
+  const hasLabeledOptions = options.some((option) => getOptionLabel(option) !== null);
 
   if (isOptionLabel(label) && hasOptionForLabel(options, label)) {
     return label;
@@ -89,7 +91,7 @@ function formatSingleAnswer(options: string[], answer: string): string | null {
     return matchedOption;
   }
 
-  return matchedOption.charAt(0).toUpperCase();
+  return getOptionLabel(matchedOption);
 }
 
 function formatMultipleAnswer(options: string[], answer: string): string | null {
@@ -120,9 +122,7 @@ function formatJudgementAnswer(
 
   const label = answer.trim().toUpperCase();
   if (isOptionLabel(label)) {
-    const matchedOption = options.find((option) =>
-      option.toUpperCase().startsWith(`${label}.`),
-    );
+    const matchedOption = options.find((option) => hasOptionLabel(option, label));
 
     if (matchedOption?.includes("正确")) return "正确";
     if (matchedOption?.includes("错误")) return "错误";
@@ -134,7 +134,7 @@ function formatJudgementAnswer(
 function formatCompletionAnswer(answer: string): string | null {
   const normalized = answer
     .trim()
-    .replace(/^答案是[:：]?\s*/u, "")
+    .replace(COMPLETION_PREFIX_PATTERN, "")
     .trim();
 
   return normalized || null;
@@ -145,11 +145,18 @@ function isOptionLabel(value: string): boolean {
 }
 
 function hasOptionForLabel(options: string[], label: string): boolean {
-  return options.some((option) => option.toUpperCase().startsWith(`${label}.`));
+  return options.some((option) => hasOptionLabel(option, label));
 }
 
 function getOptionIndex(options: string[], label: string): number {
-  return options.findIndex((option) =>
-    option.toUpperCase().startsWith(`${label}.`),
-  );
+  return options.findIndex((option) => hasOptionLabel(option, label));
+}
+
+function hasOptionLabel(option: string, label: string): boolean {
+  return getOptionLabel(option) === label;
+}
+
+function getOptionLabel(option: string): string | null {
+  const matched = option.trim().match(OPTION_LABEL_PATTERN);
+  return matched ? matched[1].toUpperCase() : null;
 }

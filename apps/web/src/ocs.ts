@@ -5,7 +5,7 @@ export interface OcsConfig {
   method: string;
   contentType: string;
   type: string;
-  data: Record<string, string>;
+  data: Record<string, any>;
   handler: string;
 }
 
@@ -21,12 +21,18 @@ export function generateOcsConfig(serverUrl: string): OcsConfig[] {
       contentType: "json",
       type: "GM_xmlhttpRequest",
       data: {
-        title: "${title}",
-        type: "${type}",
-        options: "${options}",
+        title: {
+          handler: "return (env) => { console.log('[OCS] env.title:', env.title); return env.title || ''; }"
+        },
+        type: {
+          handler: "return (env) => { console.log('[OCS] env.type:', env.type); return env.type || 'single'; }"
+        },
+        options: {
+          handler: "return (env) => { console.log('[OCS] env.options:', env.options); return env.options || ''; }"
+        }
       },
       handler:
-        "return (res) => res.code === 1 ? [res.question, res.answer] : undefined",
+        "return (res) => { console.log('[OCS DEBUG] Response:', res); console.log('[OCS DEBUG] Code:', res.code); return res.code === 1 ? [res.question, res.answer] : [res.message ?? res.question, undefined]; }",
     },
   ];
 }

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { createApp } from "../src/app";
+import { db } from "../src/db";
 import type { AiProviderResult } from "../src/modules/answer/provider";
 
 const providerResult: AiProviderResult = {
@@ -310,5 +311,121 @@ describe("createApp", () => {
     expect(response.headers.get("access-control-allow-origin")).toBe(
       "chrome-extension://test-extension",
     );
+  });
+
+  test("returns log ids with the logs list", async () => {
+    db.run("DELETE FROM logs");
+    db.query(
+      "INSERT INTO logs (timestamp, message, payload) VALUES (?, ?, ?)",
+    ).run("2026-04-24T10:00:00.000Z", "first log", JSON.stringify({ ok: true }));
+
+    const app = createApp({
+      provider: {
+        answerQuestion: async () => providerResult,
+      },
+      config: {
+        aiBaseUrl: "https://example.com/v1",
+        aiApiKey: "test-key",
+        aiModel: "test-model",
+        aiTimeoutMs: 10_000,
+        aiTemperature: 0.2,
+        aiMaxTokens: 512,
+        aiDebugDefault: false,
+        aiLogDebug: false,
+      },
+    });
+
+    const response = await app.handle(new Request("http://localhost/api/logs"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual([
+      {
+        id: expect.any(Number),
+        timestamp: "2026-04-24T10:00:00.000Z",
+        message: "first log",
+        payload: {
+          ok: true,
+        },
+      },
+    ]);
+  });
+
+  test("deletes selected logs and can clear all logs", async () => {
+    db.run("DELETE FROM logs");
+    const insert = db.query(
+      "INSERT INTO logs (timestamp, message, payload) VALUES (?, ?, ?)",
+    );
+    const first = insert.run(
+      "2026-04-24T10:00:00.000Z",
+      "first log",
+      JSON.stringify({ index: 1 }),
+    );
+    const second = insert.run(
+      "2026-04-24T10:01:00.000Z",
+      "second log",
+      JSON.stringify({ index: 2 }),
+    );
+
+    const app = createApp({
+      provider: {
+        answerQuestion: async () => providerResult,
+      },
+      config: {
+        aiBaseUrl: "https://example.com/v1",
+        aiApiKey: "test-key",
+        aiModel: "test-model",
+        aiTimeoutMs: 10_000,
+        aiTemperature: 0.2,
+        aiMaxTokens: 512,
+        aiDebugDefault: false,
+        aiLogDebug: false,
+      },
+    });
+
+    const deleteSelectedResponse = await app.handle(
+      new Request("http://localhost/api/logs/batch", {
+        method: "DELETE",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          ids: [Number(first.lastInsertRowid)],
+        }),
+      }),
+    );
+
+    expect(deleteSelectedResponse.status).toBe(200);
+
+    const afterBatchDelete = await app.handle(
+      new Request("http://localhost/api/logs"),
+    );
+    const afterBatchDeletePayload = await afterBatchDelete.json();
+
+    expect(afterBatchDeletePayload).toEqual([
+      {
+        id: Number(second.lastInsertRowid),
+        timestamp: "2026-04-24T10:01:00.000Z",
+        message: "second log",
+        payload: {
+          index: 2,
+        },
+      },
+    ]);
+
+    const clearResponse = await app.handle(
+      new Request("http://localhost/api/logs", {
+        method: "DELETE",
+      }),
+    );
+
+    expect(clearResponse.status).toBe(200);
+
+    const afterClearResponse = await app.handle(
+      new Request("http://localhost/api/logs"),
+    );
+    const afterClearPayload = await afterClearResponse.json();
+
+    expect(afterClearPayload).toEqual([]);
   });
 });

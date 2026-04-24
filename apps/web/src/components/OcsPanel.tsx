@@ -28,7 +28,18 @@ export default function OcsPanel({ showToast }: Props) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(json);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(json);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = json;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
       setCopied(true);
       showToast("系统消息：JSON 配置已复制到剪贴板");
       setTimeout(() => setCopied(false), 2000);

@@ -72,6 +72,7 @@ export async function submitAnswer(body: {
 }
 
 export interface LogEntry {
+  id: number;
   timestamp: string;
   message: string;
   payload?: any;
@@ -81,4 +82,20 @@ export async function fetchLogs(): Promise<LogEntry[]> {
   const res = await apiFetch(`${BASE}/api/logs`);
   if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
   return res.json();
+}
+
+export async function deleteLogs(ids: number[]): Promise<void> {
+  const res = await apiFetch(`${BASE}/api/logs/batch`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) throw new Error(`Failed to delete logs: ${res.status}`);
+}
+
+export async function clearLogs(): Promise<void> {
+  const res = await apiFetch(`${BASE}/api/logs`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`Failed to clear logs: ${res.status}`);
 }

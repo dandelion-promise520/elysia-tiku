@@ -40,6 +40,11 @@ export function normalizeQuestionType(
   if ((SUPPORTED_QUESTION_TYPES as readonly string[]).includes(type)) {
     return type as SupportedQuestionType;
   }
+  
+  if (type.includes("单选")) return "single";
+  if (type.includes("多选")) return "multiple";
+  if (type.includes("判断")) return "judgement";
+  if (type.includes("填空")) return "completion";
 
   return null;
 }
