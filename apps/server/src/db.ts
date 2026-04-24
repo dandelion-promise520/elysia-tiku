@@ -1,7 +1,15 @@
 import { Database } from "bun:sqlite";
+import { dirname } from "path";
+import { mkdirSync } from "fs";
 
-// Connect to SQLite DB in the server root
-const db = new Database("tiku.db", { create: true });
+const dbPath = process.env.DB_PATH || "tiku.db";
+const dir = dirname(dbPath);
+if (dir !== ".") {
+  mkdirSync(dir, { recursive: true });
+}
+
+// Connect to SQLite DB
+const db = new Database(dbPath, { create: true });
 
 // Initialize schema
 db.run(`

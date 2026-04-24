@@ -37,5 +37,12 @@ bun run dev
 ```
 该命令会同时启动后端服务（默认运行在 `http://localhost:3000`）和前端管理面板（默认运行在 `http://localhost:5173`）。
 
-### 初始化配置
-您可以复制 `apps/server/.env.example` 为 `apps/server/.env` 并进行基础配置，或者直接在启动项目后，打开前端管理面板（`http://localhost:5173`）进行可视化配置和保存。
+### 打包docker
+```bash
+docker build -t elysia-tiku:latest .
+```
+
+### 构建tar包
+```bash
+docker save elysia-tiku:latest -o elysia-tiku.tar
+```

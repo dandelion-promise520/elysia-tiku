@@ -1,23 +1,35 @@
-import { useState, useEffect, useCallback } from "react";
-import { fetchLogs, type LogEntry } from "../api";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { clearLogs, deleteLogs, fetchLogs, type LogEntry } from "../api";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, RefreshCw, Terminal, Clock, Box } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { Box, Clock, History, RefreshCw, Terminal, Trash2 } from "lucide-react";
 
 export default function LogsPanel() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
 
   const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchLogs();
       setLogs(data);
+      setSelectedIds((current) =>
+        current.filter((id) => data.some((log) => log.id === id)),
+      );
+      if (data.length === 0) {
+        setIsConfirmingClear(false);
+      }
       setError(null);
-    } catch (err: any) {
-      setError("ERR_NET: UNABLE_TO_FETCH_LOGS");
+    } catch {
+      setError("网络错误：无法获取系统日志");
     } finally {
       setLoading(false);
     }
@@ -27,81 +39,201 @@ export default function LogsPanel() {
     loadLogs();
   }, [loadLogs]);
 
+  const allSelected = logs.length > 0 && selectedIds.length === logs.length;
+  const hasSelection = selectedIds.length > 0;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : logs.map((log) => log.id));
+  };
+
+  const toggleLog = (id: number) => {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!hasSelection) return;
+
+    try {
+      setIsDeletingSelected(true);
+      await deleteLogs(selectedIds);
+      toast("已删除选中的日志");
+      setSelectedIds([]);
+      await loadLogs();
+    } catch {
+      toast("删除选中日志失败");
+    } finally {
+      setIsDeletingSelected(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (logs.length === 0) return;
+    if (!isConfirmingClear) {
+      setIsConfirmingClear(true);
+      return;
+    }
+
+    try {
+      setIsClearingAll(true);
+      await clearLogs();
+      toast("已清空全部日志");
+      setSelectedIds([]);
+      setIsConfirmingClear(false);
+      await loadLogs();
+    } catch {
+      toast("清空日志失败");
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
+
   return (
-    <Card className="border bg-card">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 border-b border-border bg-muted/20 p-6">
+    <Card className="">
+      <CardHeader className="flex flex-col items-start justify-between space-y-4 rounded-t-lg bg-[hsl(var(--slate-2))] p-6 shadow-[inset_0_-1px_0_hsl(var(--slate-6))] sm:flex-row sm:items-center sm:space-y-0">
         <div>
-          <CardTitle className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
+          <CardTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight">
             <History className="h-8 w-8 text-primary" />
-            SYS.LOGS
+            系统运行日志
           </CardTitle>
-          <CardDescription className="font-mono text-xs uppercase tracking-widest mt-2">
-            System operation history and transaction logs
+          <CardDescription className="mt-2 font-mono text-xs">
+            查看系统操作历史、错误信息及请求事务日志
           </CardDescription>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className=" h-10 px-4 bg-background rounded-md hover:bg-primary hover:text-primary-foreground group" 
-          onClick={loadLogs} 
-          disabled={loading}
-        >
-          {loading ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform" />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-md bg-background px-4 hover:bg-primary hover:text-primary-foreground"
+            onClick={loadLogs}
+            disabled={loading || isDeletingSelected || isClearingAll}
+          >
+            {loading ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="font-mono uppercase tracking-widest">刷新日志</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-md px-4"
+            onClick={handleDeleteSelected}
+            disabled={!hasSelection || loading || isDeletingSelected || isClearingAll}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="font-mono uppercase tracking-widest">删除选中</span>
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-10 rounded-md px-4"
+            onClick={handleClearAll}
+            disabled={logs.length === 0 || loading || isDeletingSelected || isClearingAll}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="font-mono uppercase tracking-widest">
+              {isConfirmingClear ? "确认清空" : "清空日志"}
+            </span>
+          </Button>
+          {isConfirmingClear && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 rounded-md px-4"
+              onClick={() => setIsConfirmingClear(false)}
+              disabled={isClearingAll}
+            >
+              <span className="font-mono uppercase tracking-widest">取消</span>
+            </Button>
           )}
-          <span className="font-mono tracking-widest uppercase">SYNC</span>
-        </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {error && (
-          <div className="m-6 p-4 border border-destructive bg-destructive/10 text-destructive text-sm font-bold font-mono tracking-widest uppercase flex items-center gap-2 shadow-[4px_4px_0_0_hsl(var(--destructive))]">
-             <Box className="h-5 w-5" />
-             {error}
+          <div className="m-6 flex items-center gap-2 border border-destructive bg-destructive/10 p-4 font-mono text-sm font-bold uppercase tracking-widest text-destructive shadow-[4px_4px_0_0_hsl(var(--destructive))]">
+            <Box className="h-5 w-5" />
+            {error}
           </div>
         )}
 
-        <div className="bg-background border-t-0 p-6">
+        <div className="bg-background p-6">
           <ScrollArea className="h-[600px] pr-4 custom-scrollbar">
             <div className="space-y-4">
-            {logs.length === 0 && !loading && (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4 py-20 font-mono uppercase tracking-widest">
-                <Terminal className="h-16 w-16 text-border" />
-                <p>NO_LOG_ENTRIES_FOUND</p>
-              </div>
-            )}
+              {logs.length > 0 && (
+                <label className="flex items-center gap-3 rounded-md border border-border/60 bg-muted/20 px-4 py-3 font-mono text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  />
+                  <span>
+                    {allSelected ? "取消全选" : "全选日志"}
+                    {hasSelection ? ` (${selectedIds.length})` : ""}
+                  </span>
+                </label>
+              )}
 
-            {logs.map((log, i) => (
-              <div key={i} className="group p-0 bg-background border border-border hover:border-primary transition-colors shadow-sm hover:shadow-[4px_4px_0_0_hsl(var(--primary))]">
-                <div className="flex items-start justify-between p-4 border-b border-border bg-muted/10 group-hover:bg-primary/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 flex items-center justify-center border border-primary bg-primary/10 text-primary">
-                      <Terminal className="h-4 w-4" />
-                    </div>
-                    <span className="font-bold text-foreground font-mono uppercase tracking-wide text-sm">{log.message}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono bg-background border border-border px-2 py-1">
-                    <Clock className="h-3 w-3 text-primary" />
-                    {new Date(log.timestamp).toLocaleString()}
-                  </div>
+              {logs.length === 0 && !loading && (
+                <div className="flex h-full flex-col items-center justify-center gap-4 py-20 font-mono text-muted-foreground">
+                  <Terminal className="h-16 w-16 text-border" />
+                  <p>暂无日志记录</p>
                 </div>
-                
-                {log.payload && (
-                  <div className="p-4 bg-black/50">
-                    <div className="mb-2 flex items-center gap-2 border-b border-border pb-2">
-                      <div className="w-3 h-3 bg-destructive border border-border" />
-                      <div className="w-3 h-3 bg-secondary border border-border" />
-                      <div className="w-3 h-3 bg-primary border border-border" />
-                      <span className="text-xs font-bold font-mono text-muted-foreground tracking-widest ml-2 uppercase">DATA_PAYLOAD</span>
+              )}
+
+              {logs.map((log) => (
+                <div
+                  key={log.id}
+                  className={cn(
+                    "group bg-background p-0 shadow-sm transition-colors glass-panel hover:shadow-[4px_4px_0_0_hsl(var(--primary))]",
+                    selectedIds.includes(log.id)
+                      ? "border-primary shadow-[4px_4px_0_0_hsl(var(--primary))]"
+                      : "hover:border-primary",
+                  )}
+                >
+                  <div className="flex items-start justify-between bg-muted/10 p-4 shadow-[inset_0_-1px_0_hsl(var(--slate-6))] transition-colors group-hover:bg-primary/5">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(log.id)}
+                        onChange={() => toggleLog(log.id)}
+                        className="h-4 w-4 accent-[hsl(var(--primary))]"
+                      />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[hsl(var(--blue-3))] text-primary shadow-[inset_0_0_0_1px_hsl(var(--blue-6))]">
+                        <Terminal className="h-4 w-4" />
+                      </div>
+                      <span className="font-mono text-sm font-bold text-foreground">
+                        {log.message}
+                      </span>
                     </div>
-                    <pre className="text-xs font-mono text-secondary overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                      <code>{JSON.stringify(log.payload, null, 2)}</code>
-                    </pre>
+                    <div className="glass-panel flex items-center gap-2 bg-background px-2 py-1 font-mono text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3 text-primary" />
+                      {new Date(log.timestamp).toLocaleString()}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {log.payload && (
+                    <div className="bg-black/50 p-4">
+                      <div className="mb-2 flex items-center gap-2 border-b border-border/30 pb-2">
+                        <div className="h-3 w-3 bg-destructive glass-panel" />
+                        <div className="h-3 w-3 bg-secondary glass-panel" />
+                        <div className="h-3 w-3 bg-primary glass-panel" />
+                        <span className="ml-2 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          请求载荷数据
+                        </span>
+                      </div>
+                      <pre className="overflow-x-auto whitespace-pre-wrap text-xs leading-relaxed text-white">
+                        <code>{JSON.stringify(log.payload, null, 2)}</code>
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </ScrollArea>
         </div>

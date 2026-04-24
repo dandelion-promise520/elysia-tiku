@@ -37,6 +37,12 @@ describe("generateOcsConfig", () => {
     expect(config[0].handler).toContain("res.question");
     expect(config[0].handler).toContain("res.answer");
   });
+
+  it("should surface backend failure messages in the OCS handler", () => {
+    const config = generateOcsConfig("http://localhost:3000");
+    expect(config[0].handler).toContain("res.message");
+    expect(config[0].handler).toContain("undefined");
+  });
 });
 
 describe("ocsConfigToJson", () => {
