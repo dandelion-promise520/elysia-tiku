@@ -5,6 +5,8 @@ export interface AppConfig {
   aiTimeoutMs: number;
   aiTemperature: number;
   aiMaxTokens: number;
+  aiRetryCount: number;
+  aiSystemPrompt: string;
   aiDebugDefault: boolean;
   aiLogDebug: boolean;
   hasPassword?: boolean;
@@ -28,33 +30,58 @@ export class AuthError extends Error {
   }
 }
 
-async function apiFetch(url: string, options: RequestInit = {}) {
+async function apiFetch(url: string, options: RequestInit = {}, retries = 0) {
   const headers = new Headers(options.headers || {});
   const token = localStorage.getItem("admin_token");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(url, { ...options, headers });
-  if (res.status === 401) {
-    throw new AuthError();
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers,
+        // 移除硬编码的超时，让后端配置生效
+      });
+
+      if (res.status === 401) {
+        throw new AuthError();
+      }
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      return res;
+    } catch (error) {
+      // 最后一次重试或认证错误时直接抛出
+      if (attempt === retries || error instanceof AuthError) {
+        throw error;
+      }
+
+      // 指数退避重试
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      console.warn(`API 请求失败，${retries - attempt} 次重试后重试:`, error);
+    }
   }
-  return res;
+
+  throw new Error('请求失败，已达到最大重试次数');
 }
 
 export async function fetchConfig(): Promise<AppConfig> {
   const res = await apiFetch(`${BASE}/api/config`);
-  if (!res.ok) throw new Error(`Failed to fetch config: ${res.status}`);
   return res.json();
 }
 
 export async function updateConfig(updates: Partial<AppConfig & { adminPassword?: string }>): Promise<void> {
-  const res = await apiFetch(`${BASE}/api/config`, {
+  await apiFetch(`${BASE}/api/config`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
-  if (!res.ok) throw new Error(`Failed to update config: ${res.status}`);
 }
 
 export async function submitAnswer(body: {
@@ -63,7 +90,7 @@ export async function submitAnswer(body: {
   options?: string[];
   debug?: boolean;
 }): Promise<AnswerResponse> {
-  const res = await fetch(`${BASE}/api/answer`, {
+  const res = await apiFetch(`${BASE}/api/answer`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -80,22 +107,19 @@ export interface LogEntry {
 
 export async function fetchLogs(): Promise<LogEntry[]> {
   const res = await apiFetch(`${BASE}/api/logs`);
-  if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
   return res.json();
 }
 
 export async function deleteLogs(ids: number[]): Promise<void> {
-  const res = await apiFetch(`${BASE}/api/logs/batch`, {
+  await apiFetch(`${BASE}/api/logs/batch`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ids }),
   });
-  if (!res.ok) throw new Error(`Failed to delete logs: ${res.status}`);
 }
 
 export async function clearLogs(): Promise<void> {
-  const res = await apiFetch(`${BASE}/api/logs`, {
+  await apiFetch(`${BASE}/api/logs`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error(`Failed to clear logs: ${res.status}`);
 }

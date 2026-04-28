@@ -35,7 +35,7 @@ bun install
 ```bash
 bun run dev
 ```
-该命令会同时启动后端服务（默认运行在 `http://localhost:3000`）和前端管理面板（默认运行在 `http://localhost:5173`）。
+该命令会同时启动后端服务（默认运行在 `http://localhost:300`）和前端管理面板（默认运行在 `http://localhost:5173`）。
 
 ### 打包docker
 ```bash

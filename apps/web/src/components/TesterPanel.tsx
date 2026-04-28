@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { submitAnswer, type AnswerResponse } from "../api";
+import { performanceMonitor } from "../utils/performance";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,18 @@ export default function TesterPanel() {
   const [options, setOptions] = useState("A. 选项 1\nB. 选项 2\nC. 选项 3\nD. 选项 4");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnswerResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!title.trim()) return;
+
     setLoading(true);
+    setError(null);
     setResult(null);
+
+    // 性能监控
+    performanceMonitor.mark('test-request-start');
+
     try {
       const optionList =
         type === "completion"
@@ -40,8 +48,18 @@ export default function TesterPanel() {
         options: optionList,
         debug: true,
       });
+
+      performanceMonitor.mark('test-request-end');
+      performanceMonitor.measure(
+        'test-request-duration',
+        'test-request-start',
+        'test-request-end'
+      );
+
       setResult(data);
-    } catch {
+    } catch (error) {
+      console.error('测试请求失败:', error);
+      setError(error instanceof Error ? error.message : '未知错误');
       setResult({
         code: 0,
         question: title,
@@ -51,13 +69,13 @@ export default function TesterPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [title, type, options]);
 
-  const handleFillExample = () => {
+  const handleFillExample = useCallback(() => {
     setTitle("下列哪个方法可以向 JavaScript 数组的末尾添加一个或多个元素？");
     setType("single");
     setOptions("A. pop()\nB. push()\nC. shift()\nD. unshift()");
-  };
+  }, []);
 
   return (
     <Card className="">
@@ -141,6 +159,15 @@ export default function TesterPanel() {
             )}
           </Button>
         </div>
+
+        {error && (
+          <div className="mt-8 bg-red-3/20 border border-red-6/30 rounded-md p-4 animate-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-2 text-red-11 font-medium">
+              <AlertTriangle className="h-5 w-5" />
+              请求失败: {error}
+            </div>
+          </div>
+        )}
 
         {result && (
           <div className={`mt-8  animate-in slide-in-from-top-4 duration-500 ${

@@ -41,27 +41,33 @@ export function createApp(options: CreateAppOptions = {}) {
   const answerService = new AnswerService(provider, config, logger);
 
   return new Elysia()
-    .onAfterHandle(({ set }) => {
-      set.headers["access-control-allow-origin"] = "*";
-      set.headers["access-control-allow-methods"] = "GET,POST,PUT,OPTIONS";
+    .onAfterHandle(({ request, set }) => {
+      const origin = request.headers.get("origin");
+      set.headers["access-control-allow-origin"] = origin || "*";
+      set.headers["access-control-allow-methods"] = "GET,POST,PUT,DELETE,OPTIONS";
       set.headers["access-control-allow-headers"] = "content-type,authorization";
+      set.headers["vary"] = "Origin";
     })
-    .options("/*", ({ set }) => {
-      set.headers["access-control-allow-origin"] = "*";
-      set.headers["access-control-allow-methods"] = "GET,POST,PUT,OPTIONS";
+    .options("/*", ({ request, set }) => {
+      const origin = request.headers.get("origin");
+      set.headers["access-control-allow-origin"] = origin || "*";
+      set.headers["access-control-allow-methods"] = "GET,POST,PUT,DELETE,OPTIONS";
       set.headers["access-control-allow-headers"] = "content-type,authorization";
+      set.headers["vary"] = "Origin";
       set.status = 204;
       return "";
     })
     .get("/api/health", () => ({ name: "elysia-tiku", version: "1.0.50", status: "running" }))
+    // 将答题模块放在鉴权组之外，确保 OCS 插件能公开访问
+    .use(createAnswerModule(answerService))
     .group("/api", (app) =>
       app
         .onBeforeHandle(({ request, set }) => {
-          const c = getConfig();
-          if (!c.adminPassword) return; // Auth disabled if no password set
+          // 只对管理接口（除 health 和 answer 外）进行鉴权
+          if (!config.adminPassword) return; 
 
           const auth = request.headers.get("authorization");
-          if (auth !== `Bearer ${c.adminPassword}`) {
+          if (auth !== `Bearer ${config.adminPassword}`) {
             set.status = 401;
             return { error: "Unauthorized" };
           }
@@ -75,6 +81,8 @@ export function createApp(options: CreateAppOptions = {}) {
             aiTimeoutMs: c.aiTimeoutMs,
             aiTemperature: c.aiTemperature,
             aiMaxTokens: c.aiMaxTokens,
+            aiRetryCount: c.aiRetryCount,
+            aiSystemPrompt: c.aiSystemPrompt,
             aiDebugDefault: c.aiDebugDefault,
             aiLogDebug: c.aiLogDebug,
             hasPassword: !!c.adminPassword,
@@ -91,11 +99,20 @@ export function createApp(options: CreateAppOptions = {}) {
           };
 
           if (typeof updates.aiBaseUrl === "string") { config.aiBaseUrl = updates.aiBaseUrl; env.AI_BASE_URL = updates.aiBaseUrl; updateDb("AI_BASE_URL", updates.aiBaseUrl); }
-          if (typeof updates.aiApiKey === "string") { config.aiApiKey = updates.aiApiKey; env.AI_API_KEY = updates.aiApiKey; updateDb("AI_API_KEY", updates.aiApiKey); }
+          
+          // 防止掩码后的 Key 覆盖真实的 Key
+          if (typeof updates.aiApiKey === "string" && !updates.aiApiKey.includes("****")) { 
+            config.aiApiKey = updates.aiApiKey; 
+            env.AI_API_KEY = updates.aiApiKey; 
+            updateDb("AI_API_KEY", updates.aiApiKey); 
+          }
+          
           if (typeof updates.aiModel === "string") { config.aiModel = updates.aiModel; env.AI_MODEL = updates.aiModel; updateDb("AI_MODEL", updates.aiModel); }
           if (typeof updates.aiTimeoutMs === "number") { config.aiTimeoutMs = updates.aiTimeoutMs; env.AI_TIMEOUT_MS = String(updates.aiTimeoutMs); updateDb("AI_TIMEOUT_MS", updates.aiTimeoutMs); }
           if (typeof updates.aiTemperature === "number") { config.aiTemperature = updates.aiTemperature; env.AI_TEMPERATURE = String(updates.aiTemperature); updateDb("AI_TEMPERATURE", updates.aiTemperature); }
           if (typeof updates.aiMaxTokens === "number") { config.aiMaxTokens = updates.aiMaxTokens; env.AI_MAX_TOKENS = String(updates.aiMaxTokens); updateDb("AI_MAX_TOKENS", updates.aiMaxTokens); }
+          if (typeof updates.aiRetryCount === "number") { config.aiRetryCount = updates.aiRetryCount; env.AI_RETRY_COUNT = String(updates.aiRetryCount); updateDb("AI_RETRY_COUNT", updates.aiRetryCount); }
+          if (typeof updates.aiSystemPrompt === "string") { config.aiSystemPrompt = updates.aiSystemPrompt; env.AI_SYSTEM_PROMPT = updates.aiSystemPrompt; updateDb("AI_SYSTEM_PROMPT", updates.aiSystemPrompt); }
           if (typeof updates.aiDebugDefault === "boolean") { config.aiDebugDefault = updates.aiDebugDefault; env.AI_DEBUG_DEFAULT = String(updates.aiDebugDefault); updateDb("AI_DEBUG_DEFAULT", updates.aiDebugDefault); }
           if (typeof updates.aiLogDebug === "boolean") { config.aiLogDebug = updates.aiLogDebug; env.AI_LOG_DEBUG = String(updates.aiLogDebug); updateDb("AI_LOG_DEBUG", updates.aiLogDebug); }
           
@@ -141,7 +158,6 @@ export function createApp(options: CreateAppOptions = {}) {
           return { message: "Selected logs deleted", deletedCount: ids.length };
         })
     )
-    .use(createAnswerModule(answerService))
     // Static file serving and SPA fallback
     .get("/*", ({ request, set }) => {
       const url = new URL(request.url);

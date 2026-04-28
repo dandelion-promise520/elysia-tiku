@@ -2,7 +2,7 @@ services:
   elysia-tiku:
     build: .
     ports:
-      - "3000:3000"
+      - "${PORT:-300}:${PORT:-300}"
     env_file:
       - .env
     environment:

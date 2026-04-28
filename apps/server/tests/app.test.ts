@@ -27,6 +27,7 @@ describe("createApp", () => {
         aiTemperature: 0.2,
         aiMaxTokens: 512,
         aiDebugDefault: false,
+        aiLogDebug: false,
       },
     });
 
@@ -69,6 +70,7 @@ describe("createApp", () => {
         aiTemperature: 0.2,
         aiMaxTokens: 512,
         aiDebugDefault: false,
+        aiLogDebug: false,
       },
     });
 
@@ -158,6 +160,7 @@ describe("createApp", () => {
         aiTemperature: 0.2,
         aiMaxTokens: 512,
         aiDebugDefault: false,
+        aiLogDebug: false,
       },
     });
 
@@ -207,6 +210,7 @@ describe("createApp", () => {
         aiTemperature: 0.2,
         aiMaxTokens: 512,
         aiDebugDefault: false,
+        aiLogDebug: false,
       },
     });
 
@@ -231,7 +235,7 @@ describe("createApp", () => {
       code: 0,
       question: "中国梦是什么？",
       answer: "",
-      message: "AI provider request failed",
+      message: "AI provider request failed after retries",
     });
   });
 

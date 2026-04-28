@@ -9,6 +9,7 @@ import {
   normalizeOptions,
   normalizeQuestionTitle,
   normalizeQuestionType,
+  type SupportedQuestionType,
 } from "./normalizer";
 import type { AiProvider } from "./provider";
 import { buildPrompt } from "./prompt";
@@ -37,7 +38,7 @@ export class AnswerService {
     if (!title) {
       console.log("[SERVICE] Title is empty, returning error");
       return {
-        status: 200,
+        status: 400,
         body: {
           code: 0,
           question: "",
@@ -48,8 +49,27 @@ export class AnswerService {
     }
 
     console.log("[SERVICE] Normalizing input");
-    const requestedType =
-      (typeof body.type === "string" ? normalizeQuestionType(body.type) : null) ?? "completion";
+    
+    // Validate question type
+    let requestedType: SupportedQuestionType | null = null;
+    if (body.type === undefined) {
+      requestedType = "completion";
+    } else if (typeof body.type === "string") {
+      requestedType = normalizeQuestionType(body.type);
+    }
+
+    if (!requestedType) {
+      console.log("[SERVICE] Unsupported question type:", body.type);
+      return {
+        status: 400,
+        body: {
+          code: 0,
+          question: normalizeQuestionTitle(title),
+          answer: "",
+          message: "Unsupported question type",
+        },
+      };
+    }
 
     const normalizedInput = {
       title: normalizeQuestionTitle(title),
@@ -60,27 +80,33 @@ export class AnswerService {
 
     console.log("[SERVICE] Calling AI provider");
     let providerResult;
-    try {
-      providerResult = await this.provider.answerQuestion(
-        buildPrompt(normalizedInput),
-      );
-      console.log("[SERVICE] AI provider returned successfully");
-    } catch (error) {
-      console.error("[SERVICE] AI provider request failed");
-      console.error("[SERVICE] Error type:", error?.constructor?.name);
-      console.error("[SERVICE] Error message:", error instanceof Error ? error.message : String(error));
-      if (error instanceof Error && error.stack) {
-        console.error("[SERVICE] Error stack:", error.stack.split('\n').slice(0, 5).join('\n'));
+    let attempts = 0;
+    const maxAttempts = (this.config.aiRetryCount ?? 1) + 1; // 尝试次数 = 重试次数 + 1
+
+    while (attempts < maxAttempts) {
+      try {
+        attempts++;
+        providerResult = await this.provider.answerQuestion(
+          buildPrompt(normalizedInput, this.config.aiSystemPrompt),
+        );
+        console.log(`[SERVICE] AI provider returned successfully on attempt ${attempts}`);
+        break; // 成功则跳出循环
+      } catch (error) {
+        console.error(`[SERVICE] AI provider request failed (Attempt ${attempts}/${maxAttempts})`);
+        if (attempts >= maxAttempts) {
+          return {
+            status: 502,
+            body: {
+              code: 0,
+              question: normalizedInput.title,
+              answer: "",
+              message: "AI provider request failed after retries",
+            },
+          };
+        }
+        // 指数退避重试
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
       }
-      return {
-        status: 200,
-        body: {
-          code: 0,
-          question: normalizedInput.title,
-          answer: "",
-          message: "AI provider request failed",
-        },
-      };
     }
 
     console.log("[SERVICE] Formatting result");

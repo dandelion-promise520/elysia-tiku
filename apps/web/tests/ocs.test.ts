@@ -3,7 +3,7 @@ import { generateOcsConfig, ocsConfigToJson } from "../src/ocs";
 
 describe("generateOcsConfig", () => {
   it("should generate valid OCS config array", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     expect(config).toHaveLength(1);
     expect(config[0].name).toBe("Elysia Tiku AI");
     expect(config[0].method).toBe("post");
@@ -23,15 +23,21 @@ describe("generateOcsConfig", () => {
     expect(config[0].homepage).toBe("http://example.com");
   });
 
-  it("should include OCS variable placeholders in data", () => {
-    const config = generateOcsConfig("http://localhost:3000");
-    expect(config[0].data.title).toBe("${title}");
-    expect(config[0].data.type).toBe("${type}");
-    expect(config[0].data.options).toBe("${options}");
+  it("should include OCS handler functions in data", () => {
+    const config = generateOcsConfig("http://localhost:300");
+    expect(config[0].data.title).toEqual({
+      handler: "return (env) => { console.log('[OCS] env.title:', env.title); return env.title || ''; }"
+    });
+    expect(config[0].data.type).toEqual({
+      handler: "return (env) => { console.log('[OCS] env.type:', env.type); return env.type || 'single'; }"
+    });
+    expect(config[0].data.options).toEqual({
+      handler: "return (env) => { console.log('[OCS] env.options:', env.options); return env.options || ''; }"
+    });
   });
 
   it("should include a valid handler string", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     expect(config[0].handler).toContain("return");
     expect(config[0].handler).toContain("res.code === 1");
     expect(config[0].handler).toContain("res.question");
@@ -39,7 +45,7 @@ describe("generateOcsConfig", () => {
   });
 
   it("should surface backend failure messages in the OCS handler", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     expect(config[0].handler).toContain("res.message");
     expect(config[0].handler).toContain("undefined");
   });
@@ -47,20 +53,20 @@ describe("generateOcsConfig", () => {
 
 describe("ocsConfigToJson", () => {
   it("should produce valid JSON string", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     const json = ocsConfigToJson(config);
     expect(() => JSON.parse(json)).not.toThrow();
   });
 
   it("should be pretty-printed with 2-space indent", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     const json = ocsConfigToJson(config);
     expect(json).toContain("  ");
     expect(json.startsWith("[")).toBe(true);
   });
 
   it("should roundtrip correctly", () => {
-    const config = generateOcsConfig("http://localhost:3000");
+    const config = generateOcsConfig("http://localhost:300");
     const json = ocsConfigToJson(config);
     const parsed = JSON.parse(json);
     expect(parsed).toEqual(config);

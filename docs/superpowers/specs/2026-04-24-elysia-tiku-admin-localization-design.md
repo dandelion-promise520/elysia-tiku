@@ -72,7 +72,7 @@
     *   `EXEC.COPY_CONFIG` ➔ `复制完整配置代码`
 *   **指南与提示：**
     *   `QUICK_START.MANUAL` ➔ `快速使用指南`
-    *   步骤1：`Ensure backend service is running and accessible (use localhost:3000 for local dev).` ➔ `请确保后端服务正在运行且可访问（本地开发请使用 localhost:3000）。`
+    *   步骤1：`Ensure backend service is running and accessible (use localhost:300 for local dev).` ➔ `请确保后端服务正在运行且可访问（本地开发请使用 localhost:300）。`
     *   步骤2：`Input server URL above, JSON payload updates automatically.` ➔ `在上方输入服务器地址，下方的 JSON 配置代码会自动更新。`
     *   步骤3：`Execute COPY and paste into OCS Extension settings.` ➔ `点击复制按钮，并将代码粘贴到 OCS 扩展的自定义题库设置中。`
     *   `HTTPS_WARNING` ➔ `HTTPS 混合内容警告`

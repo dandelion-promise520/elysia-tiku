@@ -5,13 +5,16 @@
   "module": "src/server.ts",
   "scripts": {
     "dev": "bun run --watch src/server.ts",
-    "start": "bun run src/server.ts"
+    "start": "bun run src/server.ts",
+    "build": "tsc --noEmit"
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.10",
-    "elysia": "latest"
+    "elysia": "latest",
+    "@elysia-tiku/constants": "workspace:*"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^6.0.3"
   }
 }

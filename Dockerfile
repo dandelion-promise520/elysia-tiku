@@ -14,7 +14,7 @@ COPY . .
 RUN bun run --filter @elysia-tiku/web build
 
 # Expose the server port
-EXPOSE 3000
+EXPOSE 300
 
 # Start the server
 CMD ["bun", "run", "--filter", "@elysia-tiku/server", "start"]

@@ -5,9 +5,10 @@ export interface PromptMessage {
   content: string;
 }
 
-export function buildPrompt(question: AnswerRequest): PromptMessage[] {
-  const systemPrompt =
-    "你是教育类客观题答题助手。必须仅返回 JSON，字段包含 answer、confidence、reason，不要返回 markdown 或额外解释。";
+const DEFAULT_SYSTEM_PROMPT = "你是教育类客观题答题助手。必须仅返回 JSON，字段包含 answer、confidence、reason，不要返回 markdown 或额外解释。";
+
+export function buildPrompt(question: AnswerRequest, customSystemPrompt?: string): PromptMessage[] {
+  const systemPrompt = customSystemPrompt || DEFAULT_SYSTEM_PROMPT;
 
   const userPrompt = JSON.stringify({
     title: question.title,

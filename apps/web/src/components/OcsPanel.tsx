@@ -1,3 +1,4 @@
+import { DEFAULT_SERVER_PORT } from "@elysia-tiku/constants";
 import { useState, useMemo } from "react";
 import { generateOcsConfig, ocsConfigToJson } from "../ocs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,11 +16,11 @@ export default function OcsPanel({ showToast }: Props) {
     if (typeof window !== "undefined") {
       const origin = window.location.origin;
       if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-        return origin.replace(/:\d+$/, ":3000");
+        return origin.replace(/:\d+$/, `:${DEFAULT_SERVER_PORT}`);
       }
       return origin;
     }
-    return "http://localhost:3000";
+    return `http://localhost:${DEFAULT_SERVER_PORT}`;
   });
   const [copied, setCopied] = useState(false);
 
@@ -68,7 +69,7 @@ export default function OcsPanel({ showToast }: Props) {
             <Input
               type="text"
               className=" px-4 bg-background"
-              placeholder="http://your-server:3000"
+              placeholder={`http://your-server:${DEFAULT_SERVER_PORT}`}
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
             />
@@ -125,7 +126,7 @@ export default function OcsPanel({ showToast }: Props) {
         </CardHeader>
         <CardContent className="p-8 space-y-6">
           {[
-            { step: "01", text: "请确保后端服务正在运行且可访问（本地开发请使用 localhost:3000）。" },
+            { step: "01", text: `请确保后端服务正在运行且可访问（本地开发请使用 localhost:${DEFAULT_SERVER_PORT}）。` },
             { step: "02", text: "在上方输入服务器地址，下方的 JSON 配置代码会自动更新。" },
             { step: "03", text: "点击复制按钮，并将代码粘贴到 OCS 扩展的自定义题库设置中。" },
           ].map((item) => (
