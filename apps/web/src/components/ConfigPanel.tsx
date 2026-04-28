@@ -141,7 +141,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-8 space-y-10">
+      <CardContent className="p-8 pt-0 space-y-10 overflow-hidden">
         <div className="space-y-4">
           <div className="flex items-start gap-3 p-4 glass-panel bg-blue-3/30 rounded-lg border border-blue-6/20">
             <ScrollText className="h-5 w-5 text-blue-11 mt-0.5" />
@@ -203,6 +203,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                 <Label className="text-base font-semibold text-foreground">输出随机性</Label>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   className="input-enhanced h-11"
                   step="0.1"
                   min="0"
@@ -222,6 +223,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                 <Label className="text-base font-semibold text-foreground">最大输出长度</Label>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   className="input-enhanced h-11"
                   step="64"
                   min="64"
@@ -240,6 +242,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                 <Label className="text-base font-semibold text-foreground">请求超时时间</Label>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   className="input-enhanced h-11"
                   step="1000"
                   min="5000"
@@ -258,6 +261,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                 <Label className="text-base font-semibold text-foreground">失败重试次数</Label>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   className="input-enhanced h-11"
                   min="0"
                   max="5"

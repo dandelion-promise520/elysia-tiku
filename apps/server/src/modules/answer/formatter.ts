@@ -33,7 +33,11 @@ export type FormattedAnswerResult = AnswerSuccessResult | AnswerFailureResult;
 const JUDGEMENT_TRUE_VALUES = new Set(["正确", "对", "true", "yes"]);
 const JUDGEMENT_FALSE_VALUES = new Set(["错误", "错", "false", "no"]);
 const OPTION_LABEL_PATTERN = /^([A-Z])(?:[.\u3001\uFF0E:：\)）]|\s)/i;
-const COMPLETION_PREFIX_PATTERN = /^答案是(?:[:：])?\s*/u;
+const ANSWER_CLEANUP_PATTERN = /^(?:答案是?|正确答案是?|正确选项是?|答案[是为]?)[:：]?\s*/iu;
+
+function cleanAnswer(raw: string): string {
+  return raw.trim().replace(ANSWER_CLEANUP_PATTERN, "").trim();
+}
 
 export function formatAnswerResult(
   question: NormalizedQuestion,
@@ -76,15 +80,25 @@ function formatAnswerByType(
 }
 
 function formatSingleAnswer(options: string[], answer: string): string | null {
-  const trimmed = answer.trim();
-  const label = trimmed.toUpperCase();
+  const cleaned = cleanAnswer(answer);
+  const upper = cleaned.toUpperCase();
   const hasLabeledOptions = options.some((option) => getOptionLabel(option) !== null);
 
-  if (isOptionLabel(label) && hasOptionForLabel(options, label)) {
-    return label;
+  // 带标签的选项：AI 返回了有效标签
+  if (isOptionLabel(upper) && hasOptionForLabel(options, upper)) {
+    return upper;
   }
 
-  const matchedOption = options.find((option) => option.includes(trimmed));
+  // AI 可能对无标签选项返回了字母（如 "B"），转为序号匹配
+  if (isOptionLabel(upper) && !hasLabeledOptions) {
+    const index = upper.charCodeAt(0) - 65;
+    if (index >= 0 && index < options.length) {
+      return options[index];
+    }
+  }
+
+  // 模糊匹配：选项文本包含答案
+  const matchedOption = options.find((option) => option.includes(cleaned));
   if (!matchedOption) return null;
 
   if (!hasLabeledOptions) {
@@ -95,15 +109,27 @@ function formatSingleAnswer(options: string[], answer: string): string | null {
 }
 
 function formatMultipleAnswer(options: string[], answer: string): string | null {
-  const labels = answer
-    .split("#")
-    .map((part) => part.trim().toUpperCase())
-    .filter((part) => isOptionLabel(part) && hasOptionForLabel(options, part));
+  const cleaned = cleanAnswer(answer);
+  const parts = cleaned.split("#").map((p) => p.trim().toUpperCase()).filter(Boolean);
+  const hasLabeledOptions = options.some((option) => getOptionLabel(option) !== null);
+
+  // 收集所有有效的标签
+  const labels: string[] = [];
+  for (const part of parts) {
+    if (isOptionLabel(part) && hasOptionForLabel(options, part)) {
+      labels.push(part);
+    } else if (isOptionLabel(part) && !hasLabeledOptions) {
+      // 无标签选项的字母 → 序号映射
+      const index = part.charCodeAt(0) - 65;
+      if (index >= 0 && index < options.length) {
+        labels.push(options[index]);
+      }
+    }
+  }
 
   if (labels.length === 0) return null;
 
   const uniqueLabels = [...new Set(labels)];
-
   uniqueLabels.sort(
     (left, right) => getOptionIndex(options, left) - getOptionIndex(options, right),
   );
@@ -115,12 +141,13 @@ function formatJudgementAnswer(
   options: string[],
   answer: string,
 ): string | null {
-  const normalized = answer.trim().toLowerCase();
+  const cleaned = cleanAnswer(answer);
+  const normalized = cleaned.toLowerCase();
 
   if (JUDGEMENT_TRUE_VALUES.has(normalized)) return "正确";
   if (JUDGEMENT_FALSE_VALUES.has(normalized)) return "错误";
 
-  const label = answer.trim().toUpperCase();
+  const label = cleaned.toUpperCase();
   if (isOptionLabel(label)) {
     const matchedOption = options.find((option) => hasOptionLabel(option, label));
 
@@ -131,13 +158,9 @@ function formatJudgementAnswer(
   return null;
 }
 
-function formatCompletionAnswer(answer: string): string | null {
-  const normalized = answer
-    .trim()
-    .replace(COMPLETION_PREFIX_PATTERN, "")
-    .trim();
-
-  return normalized || null;
+function formatCompletionAnswer(answer: string): string {
+  const cleaned = cleanAnswer(answer);
+  return cleaned || null;
 }
 
 function isOptionLabel(value: string): boolean {
@@ -149,7 +172,9 @@ function hasOptionForLabel(options: string[], label: string): boolean {
 }
 
 function getOptionIndex(options: string[], label: string): number {
-  return options.findIndex((option) => hasOptionLabel(option, label));
+  const byLabel = options.findIndex((option) => hasOptionLabel(option, label));
+  if (byLabel !== -1) return byLabel;
+  return options.findIndex((option) => option === label);
 }
 
 function hasOptionLabel(option: string, label: string): boolean {

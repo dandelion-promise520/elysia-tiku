@@ -146,6 +146,7 @@ export default function App() {
               <button
                 key={item.id}
                 onClick={() => setTab(item.id)}
+                aria-current={isActive ? "page" : undefined}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
                   isActive
                     ? "bg-gradient-to-r from-blue-8/20 to-blue-9/10 text-blue-11 shadow-sm border border-blue-7/30"
@@ -169,7 +170,7 @@ export default function App() {
                 <span className={`h-2 w-2 rounded-full ${online ? "bg-green-9" : "bg-destructive"} animate-pulse`} />
                 <span className="font-medium">{online ? "服务运行中" : "服务已离线"}</span>
               </span>
-              <span className="text-muted-foreground">{Math.floor(Math.random() * 40 + 20)}% 内存</span>
+              <span className="text-muted-foreground">系统就绪</span>
             </div>
             {config && (
               <div className="text-xs text-muted-foreground truncate">
