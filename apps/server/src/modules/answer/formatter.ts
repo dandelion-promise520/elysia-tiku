@@ -110,19 +110,25 @@ function formatSingleAnswer(options: string[], answer: string): string | null {
 
 function formatMultipleAnswer(options: string[], answer: string): string | null {
   const cleaned = cleanAnswer(answer);
-  const parts = cleaned.split("#").map((p) => p.trim().toUpperCase()).filter(Boolean);
+  const parts = cleaned.split("#").map((p) => p.trim()).filter(Boolean);
   const hasLabeledOptions = options.some((option) => getOptionLabel(option) !== null);
 
-  // 收集所有有效的标签
   const labels: string[] = [];
   for (const part of parts) {
-    if (isOptionLabel(part) && hasOptionForLabel(options, part)) {
-      labels.push(part);
-    } else if (isOptionLabel(part) && !hasLabeledOptions) {
+    const upper = part.toUpperCase();
+    if (isOptionLabel(upper) && hasOptionForLabel(options, upper)) {
+      labels.push(upper);
+    } else if (isOptionLabel(upper) && !hasLabeledOptions) {
       // 无标签选项的字母 → 序号映射
-      const index = part.charCodeAt(0) - 65;
+      const index = upper.charCodeAt(0) - 65;
       if (index >= 0 && index < options.length) {
         labels.push(options[index]);
+      }
+    } else {
+      // 模糊匹配：AI 返回了完整选项文本
+      const matched = options.find((o) => o.includes(part));
+      if (matched) {
+        labels.push(hasLabeledOptions ? (getOptionLabel(matched) ?? matched) : matched);
       }
     }
   }
