@@ -146,9 +146,12 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           <div className="flex items-start gap-3 p-4 glass-panel bg-blue-3/30 rounded-lg border border-blue-6/20">
             <ScrollText className="h-5 w-5 text-blue-11 mt-0.5" />
             <div className="flex-1 space-y-3">
-              <Label className="text-base font-semibold text-foreground">API 接口地址</Label>
+              <Label className="text-base font-semibold text-foreground" htmlFor="aiBaseUrl">API 接口地址</Label>
               <Input
+                id="aiBaseUrl"
+                name="aiBaseUrl"
                 type="text"
+                autoComplete="url"
                 className="input-enhanced h-11"
                 placeholder="https://api.openai.com/v1"
                 value={form.aiBaseUrl}
@@ -164,9 +167,12 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-blue-3/30 rounded-lg border border-blue-6/20">
               <Key className="h-5 w-5 text-blue-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">API 密钥</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiApiKey">API 密钥</Label>
                 <Input
+                  id="aiApiKey"
+                  name="aiApiKey"
                   type="password"
+                  autoComplete="current-password"
                   className="input-enhanced h-11"
                   placeholder={config?.aiApiKey ? "[已设置，输入新密钥以覆盖]" : "[请输入 API 密钥]"}
                   value={form.aiApiKey}
@@ -181,9 +187,13 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-blue-3/30 rounded-lg border border-blue-6/20">
               <Cpu className="h-5 w-5 text-blue-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">AI 模型名称</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiModel">AI 模型名称</Label>
                 <Input
+                  id="aiModel"
+                  name="aiModel"
                   type="text"
+                  autoComplete="off"
+                  spellCheck={false}
                   className="input-enhanced h-11"
                   placeholder="gpt-4o-mini"
                   value={form.aiModel}
@@ -200,10 +210,13 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-orange-3/30 rounded-lg border border-orange-6/20">
               <Thermometer className="h-5 w-5 text-orange-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">输出随机性</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiTemperature">输出随机性</Label>
                 <Input
+                  id="aiTemperature"
+                  name="aiTemperature"
                   type="number"
                   inputMode="decimal"
+                  autoComplete="off"
                   className="input-enhanced h-11"
                   step="0.1"
                   min="0"
@@ -220,10 +233,13 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-green-3/30 rounded-lg border border-green-6/20">
               <Hash className="h-5 w-5 text-green-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">最大输出长度</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiMaxTokens">最大输出长度</Label>
                 <Input
+                  id="aiMaxTokens"
+                  name="aiMaxTokens"
                   type="number"
                   inputMode="numeric"
+                  autoComplete="off"
                   className="input-enhanced h-11"
                   step="64"
                   min="64"
@@ -239,10 +255,13 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-purple-3/30 rounded-lg border border-purple-6/20">
               <Timer className="h-5 w-5 text-purple-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">请求超时时间</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiTimeoutMs">请求超时时间</Label>
                 <Input
+                  id="aiTimeoutMs"
+                  name="aiTimeoutMs"
                   type="number"
                   inputMode="numeric"
+                  autoComplete="off"
                   className="input-enhanced h-11"
                   step="1000"
                   min="5000"
@@ -258,10 +277,13 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="flex items-start gap-3 p-4 glass-panel bg-indigo-3/30 rounded-lg border border-indigo-6/20">
               <Shuffle className="h-5 w-5 text-indigo-11 mt-0.5" />
               <div className="flex-1 space-y-3">
-                <Label className="text-base font-semibold text-foreground">失败重试次数</Label>
+                <Label className="text-base font-semibold text-foreground" htmlFor="aiRetryCount">失败重试次数</Label>
                 <Input
+                  id="aiRetryCount"
+                  name="aiRetryCount"
                   type="number"
                   inputMode="numeric"
+                  autoComplete="off"
                   className="input-enhanced h-11"
                   min="0"
                   max="5"
@@ -278,10 +300,12 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           <div className="flex items-start gap-3 p-4 glass-panel bg-slate-3/30 rounded-lg border border-slate-6/20">
             <ScrollText className="h-5 w-5 text-slate-11 mt-0.5" />
             <div className="flex-1 space-y-3">
-              <Label className="text-base font-semibold text-foreground">AI 系统提示词 (System Prompt)</Label>
+              <Label className="text-base font-semibold text-foreground" htmlFor="aiSystemPrompt">AI 系统提示词 (System Prompt)</Label>
               <textarea
-                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 input-enhanced"
-                placeholder="设置 AI 的行为指令..."
+                id="aiSystemPrompt"
+                name="aiSystemPrompt"
+                className="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 input-enhanced resize-y"
+                placeholder="设置 AI 的行为指令…"
                 value={form.aiSystemPrompt}
                 onChange={(e) => set("aiSystemPrompt", e.target.value)}
               />
@@ -294,7 +318,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
           <h3 className="text-lg font-semibold text-foreground mb-6">高级调试选项</h3>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="group p-5 glass-panel bg-background hover:bg-muted/5 transition-all duration-200 rounded-lg border border-border/50 hover:border-blue-6/30">
+            <div className="group p-5 glass-panel bg-background hover:bg-muted/5 transition-colors duration-200 rounded-lg border border-border/50 hover:border-blue-6/30">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
@@ -315,7 +339,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
               </div>
             </div>
 
-            <div className="group p-5 glass-panel bg-background hover:bg-muted/5 transition-all duration-200 rounded-lg border border-border/50 hover:border-green-6/30">
+            <div className="group p-5 glass-panel bg-background hover:bg-muted/5 transition-colors duration-200 rounded-lg border border-border/50 hover:border-green-6/30">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
@@ -331,7 +355,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                 <Switch
                   checked={form.aiLogDebug}
                   onCheckedChange={(v) => set("aiLogDebug", v)}
-                  className="data-[state=checked]:bg-green-9 data-[state=checked]:border-green-8"
+                  className="data-[state=checked]:bg-green-10 data-[state=checked]:border-green-8"
                 />
               </div>
             </div>
@@ -355,7 +379,10 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
             <div className="space-y-4">
               <div className="relative">
                 <Input
+                  id="adminPassword"
+                  name="adminPassword"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   className="input-enhanced h-12 border-red-6/50 focus:border-red-9 pr-12 text-base"
                   placeholder={config?.hasPassword ? "[已设置，输入新密码以覆盖]" : "[未设置密码]"}
                   value={form.adminPassword}
@@ -365,7 +392,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-red-11 hover:text-red-11/80 transition-colors p-1"
                   onClick={() => setShowPassword((v) => !v)}
-                  tabIndex={-1}
+                  aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -470,7 +497,7 @@ export default function ConfigPanel({ config, onSaved, showToast }: Props) {
               {saving ? (
                 <span className="flex items-center justify-center gap-3">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  正在保存配置...
+                  正在保存配置…
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-3 group-hover:scale-105 transition-transform">
