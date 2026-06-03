@@ -164,7 +164,7 @@ function formatJudgementAnswer(
   return null;
 }
 
-function formatCompletionAnswer(answer: string): string {
+function formatCompletionAnswer(answer: string): string | null {
   const cleaned = cleanAnswer(answer);
   return cleaned || null;
 }

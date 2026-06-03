@@ -12,13 +12,13 @@ import { AnswerService } from "./modules/answer/service";
 import type { AnswerServiceLogger } from "./modules/answer/service";
 
 interface CreateAppOptions {
-  config?: AppConfig;
+  config?: Partial<AppConfig>;
   provider?: AiProvider;
   logger?: AnswerServiceLogger;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
-  const config = options.config ?? getConfig();
+  const config = { ...getConfig(), ...options.config };
   const provider = options.provider ?? createOpenAiCompatibleProvider(config);
   const logger =
     options.logger ??

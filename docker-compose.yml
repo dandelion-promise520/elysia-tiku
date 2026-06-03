@@ -1,15 +1,14 @@
 services:
   elysia-tiku:
     build: .
+    image: elysia-tiku:latest
+    container_name: elysia-tiku
     ports:
-      - "${PORT:-300}:${PORT:-300}"
-    env_file:
-      - .env
-    environment:
-      - DB_PATH=/app/data/tiku.db
+      - "300:300"
     volumes:
-      - tiku-data:/app/data
+      # 挂载数据卷以持久化数据库和配置
+      - ./data:/data
+    environment:
+      - PORT=300
+      - DB_PATH=/data/tiku.db
     restart: unless-stopped
-
-volumes:
-  tiku-data:

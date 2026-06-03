@@ -11,7 +11,7 @@ import {
   normalizeQuestionType,
   type SupportedQuestionType,
 } from "./normalizer";
-import type { AiProvider } from "./provider";
+import type { AiProvider, AiProviderResult } from "./provider";
 import { buildPrompt } from "./prompt";
 
 export type AnswerServiceResponse =
@@ -79,7 +79,7 @@ export class AnswerService {
     };
 
     console.log("[SERVICE] Calling AI provider");
-    let providerResult;
+    let providerResult: AiProviderResult | undefined;
     let attempts = 0;
     const maxAttempts = (this.config.aiRetryCount ?? 1) + 1; // 尝试次数 = 重试次数 + 1
 
@@ -107,6 +107,18 @@ export class AnswerService {
         // 指数退避重试
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
       }
+    }
+
+    if (!providerResult) {
+      return {
+        status: 502,
+        body: {
+          code: 0,
+          question: normalizedInput.title,
+          answer: "",
+          message: "AI provider result not available",
+        },
+      };
     }
 
     console.log("[SERVICE] Formatting result");
