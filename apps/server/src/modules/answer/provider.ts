@@ -19,6 +19,20 @@ interface ChatCompletionResponse {
   }>;
 }
 
+function extractJson(text: string): string {
+  const trimmed = text.trim();
+  const markdownMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (markdownMatch) {
+    return markdownMatch[1].trim();
+  }
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) {
+    return trimmed.substring(start, end + 1);
+  }
+  return trimmed;
+}
+
 export function createOpenAiCompatibleProvider(config: AppConfig): AiProvider {
   return {
     async answerQuestion(messages) {
@@ -29,7 +43,10 @@ export function createOpenAiCompatibleProvider(config: AppConfig): AiProvider {
       }, config.aiTimeoutMs);
 
       try {
-        const url = `${config.aiBaseUrl}/chat/completions`;
+        let url = config.aiBaseUrl.trim();
+        if (url && !url.endsWith("/chat/completions")) {
+          url = url.endsWith("/") ? `${url}chat/completions` : `${url}/chat/completions`;
+        }
         console.log("[PROVIDER] Sending request to:", url);
         console.log("[PROVIDER] Model:", config.aiModel);
 
@@ -63,7 +80,8 @@ export function createOpenAiCompatibleProvider(config: AppConfig): AiProvider {
         const rawText = data.choices?.[0]?.message?.content ?? "";
         console.log("[PROVIDER] Raw response length:", rawText.length);
 
-        const payload = JSON.parse(rawText) as AiAnswerPayload;
+        const cleanedText = extractJson(rawText);
+        const payload = JSON.parse(cleanedText) as AiAnswerPayload;
 
         return {
           rawText,
