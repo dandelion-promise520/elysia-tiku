@@ -7,6 +7,7 @@
 本项目主要包含两个子应用（位于 `apps/` 目录下）：
 
 ### 1. 后端服务 (`apps/server`)
+
 基于高性能的 **ElysiaJS** 框架与 Bun 运行时构建，主要负责处理配置更新和 AI 答题请求。
 
 - **配置管理**：提供 API 获取和动态更新 AI 配置（运行时动态生效，无需重启）。
@@ -18,6 +19,7 @@
   - **Debug 机制**: 支持开启 Debug 模式返回原始 Prompt 和 AI 的原始输出内容，方便调试提示词和响应。
 
 ### 2. 前端管理面板 (`apps/web`)
+
 基于 **React + Vite + TypeScript** 构建的可视化 Dashboard。
 
 - **⚙️ AI 配置**：可视化修改 AI 接口地址、API Key、使用的模型等参数。
@@ -27,22 +29,46 @@
 ## 快速开始
 
 ### 安装依赖
+
 ```bash
 bun install
 ```
 
 ### 启动开发环境
+
 ```bash
 bun run dev
 ```
+
 该命令会同时启动后端服务（默认运行在 `http://localhost:300`）和前端管理面板（默认运行在 `http://localhost:5173`）。
 
 ### 打包docker
+
 ```bash
 docker build -t elysia-tiku:latest .
 ```
 
 ### 构建tar包
+
 ```bash
 docker save elysia-tiku:latest -o elysia-tiku.tar
 ```
+
+### Docker Compose 部署 (推荐)
+
+适用于服务器上直接拉取源码部署：
+
+```bash
+# 1. 克隆源码并进入目录
+git clone https://github.com/dandelion-promise520/elysia-tiku
+cd elysia-tiku
+
+# 2. 一键构建并启动服务 (后台运行)
+docker compose up -d --build
+
+# 3. 后续更新升级
+git pull
+docker compose up -d --build
+```
+
+> **提示：** 启动后服务运行在 `http://<服务器IP>:300`，数据库及配置文件将持久化在 `./data` 目录下。
